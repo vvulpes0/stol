@@ -1,0 +1,81 @@
+0: default
+   * ALWAYS WE for IR/A/B/ALU with PC on addr
+   * if unmasked irq
+     - ack interrupt, WE SR, goto 5
+   * else if src imm
+     - pc+, goto 1
+   * else if src indirect
+     - pc+, goto 2
+   * else if dest imm
+     - pc+, goto 3
+   * else if dest indirect
+     - pc+, goto 4
+   // [still trying means src and dest are register]
+   * else if conditional [branch|call|ret|trap] and failed:
+     - pc+, goto 0
+   * else if conditional branch [NOT call nor ret]
+     - load pc [add if relative], goto 0
+   * else if trap or call
+     - pc+, WE SR, goto 5 [add mux so if trap LOAD is vector]
+   * else if ret
+     - pc+, goto 6
+   * else if push
+     - pc+, goto 7
+   * else if pop
+     - pc+, goto 8
+   * else if psp op
+     - pc+, WE SR, psp_WE if set, reg_WE if write, goto 0
+   * else
+     - pc+, WE SR and reg, goto 0
+
+1: load src imm // stack,ret,trap impossible
+   * (pc) -> b,roff (mem_R, B_WE, ROff_WE, ALU_WE)
+   * if src indirect
+     - pc+, goto 2
+   * else if dest imm
+     - pc+, goto 3
+   * else if dest indirect
+     - pc+, goto 4
+   // [still trying means src and dest are obtained]
+   * else if conditional [branch|call] and failed:
+     - pc+, goto 0
+   * else if conditional branch [NOT call]
+     - load pc [add-1 if relative], goto 0
+   * else if call
+     - pc+, WE SR, goto 5
+   * else
+     - pc+, WE SR and reg, goto 0
+
+2: load src indirect // stack,ret,trap impossible
+   * (rs) or (rs+roff) -> b, depending on src type; ALU_WE
+   * if dest imm
+     - goto 3
+   * else if dest indirect
+     - goto 4
+   // [still trying means src and dest are obtained]
+   * else if conditional [branch|call] and failed:
+     - goto 0
+   * else if conditional branch [NOT call]
+     - load pc [add-1 if relative], goto 0
+   * else if call
+     - WE SR, goto 5
+   * else
+     - WE SR and reg, goto 0
+
+3: load dest imm // stack and conditional impossible
+   * (pc) -> a,roff (mem_R, A_WE, ROff_WE, ALU_WE)
+   * dest MUST be indirect: pc+, goto 4
+
+4: load dest indirect // stack and conditional impossible
+   * (rd) or (rd+roff) -> a; ALU_WE, SR WE, goto 9
+
+5: call
+   * push, pc_load, addr_sel=sp, data_sel=pc, goto 0
+6: ret
+   * pop, (sp)->b, B_WE, ALU_WE, pc_load, SR_WE, goto 0
+7: push
+   * push, alu->(sp), SR_WE, goto 0
+8: pop
+   * pop, (sp)->reg, SR_WE, goto 0
+9: writeback mem dest
+   * ALU -> (rd) or (rd+roff), depending on dest type, SR_WE, goto 0

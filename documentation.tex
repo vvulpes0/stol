@@ -1,0 +1,4631 @@
+\documentclass[12pt,english]{book}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{tabularray}\UseTblrLibrary{booktabs}
+\usepackage[scale=0.875]{GoMono}
+\usepackage{Baskervaldx}
+\usepackage[T1]{fontenc}
+\usepackage[bigdelims,vvarbb]{newtxmath}
+\usepackage[margin=1in]{geometry}
+\usepackage{enumitem}\setlist[enumerate]{leftmargin=*}
+\usepackage{fancyhdr}
+\usepackage{emptypage}
+\usepackage{multicol}
+\usepackage[table]{xcolor}
+\usepackage{tikz}\usetikzlibrary{shapes.geometric}
+\usepackage{microtype}
+\usepackage{imakeidx}\makeindex[intoc]
+\usepackage[colorlinks,allcolors=.]{hyperref}
+\usepackage[type={CC},modifier={by},version={4.0}]{doclicense}
+\title{STOL: Programmer's Reference Manual}
+\newbox\boxa
+\newbox\blob
+\sbox\boxa{15}
+\newcommand*{\encoding}[1]{\noindent
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\multicolumn{1}{c}{\hbox to \wd\boxa{\hss 15\hss}}&
+\multicolumn{1}{c}{\hbox to \wd\boxa{\hss 14\hss}}&
+\multicolumn{1}{c}{\hbox to \wd\boxa{\hss 13\hss}}&
+\multicolumn{1}{c}{\hbox to \wd\boxa{\hss 12\hss}}&
+\multicolumn{1}{c}{\hbox to \wd\boxa{\hss 11\hss}}&
+\multicolumn{1}{c}{\hbox to \wd\boxa{\hss 10\hss}}&
+\multicolumn{1}{c}{\hbox to \wd\boxa{\hss 9\hss}}&
+\multicolumn{1}{c}{\hbox to \wd\boxa{\hss 8\hss}}&
+\multicolumn{1}{c}{\hbox to \wd\boxa{\hss 7\hss}}&
+\multicolumn{1}{c}{\hbox to \wd\boxa{\hss 6\hss}}&
+\multicolumn{1}{c}{\hbox to \wd\boxa{\hss 5\hss}}&
+\multicolumn{1}{c}{\hbox to \wd\boxa{\hss 4\hss}}&
+\multicolumn{1}{c}{\hbox to \wd\boxa{\hss 3\hss}}&
+\multicolumn{1}{c}{\hbox to \wd\boxa{\hss 2\hss}}&
+\multicolumn{1}{c}{\hbox to \wd\boxa{\hss 1\hss}}&
+\multicolumn{1}{c}{\hbox to \wd\boxa{\hss 0\hss}}\\\hline
+#1\\\hline
+\end{tabular}}
+\newcommand*{\asmstyle}{\noindent\ttfamily\selectfont\small}
+\newcommand*{\asmline}[3][]{%
+\null\hbox to 0.5in{\ifx#1\empty\else{#1}:\fi\hss}%
+\hbox to 0.625in{\textbf{#2}\hss}%
+\hbox to 1.125in{#3\hss}}
+\newcommand*{\instruction}[2][]{%
+  \clearpage
+  \thispagestyle{fancy}%
+  \fancyhf[HL,HR]{\huge{#2}}%
+  \fancyhf[HC]{#1}\addtocounter{section}{1}\noindent
+}
+\newcommand*{\concept}[2][]{%
+  \textit{#2}\ifx#1\empty\empty\index{#2}\else\index{#1}\fi}
+\let\otextvs\textvisiblespace
+\renewcommand*{\textvisiblespace}{{\fontencoding{OT1}\selectfont\otextvs}}
+\let\geq\geqslant
+\let\leq\leqslant
+\let\emptyset\varnothing
+\author{Dakotah Lambert}
+\date{\(\beta\cdot{}\)25C}
+\setlength{\headheight}{30.0pt}
+\addtolength{\topmargin}{-18.0pt}
+\begin{document}
+\frontmatter
+\maketitle
+\leavevmode\thispagestyle{empty}
+\vfill
+\noindent
+The information in this manual has been reviewed
+and is believed to be entirely reliable.
+However, the author does not assume any liability
+arising out of the application or use of any product,
+software, or hardware described herein.
+The material in this manual is for informational purposes only
+and is subject to change without notice.
+
+\vspace{\baselineskip}\noindent
+\parbox[c]{1in}{\doclicenseImage[imagewidth=1in]} Dakotah Lambert, 2025
+
+\vspace{\baselineskip}\noindent
+\textcopyright 2025 by Dakotah Lambert.
+This document is licensed under
+\doclicenseLongName.
+To view a copy of this license,
+visit \url{\doclicenseURL}
+\tableofcontents
+\let\ocleardoublepage\cleardoublepage
+\let\cleardoublepage\clearpage
+\listoffigures
+\listoftables
+\let\cleardoublepage\ocleardoublepage
+
+\clearpage
+\section*{Quick Reference}\markboth{}{}\pagestyle{empty}%
+\let\ogcenter\center
+\let\ogendcenter\endcenter
+\renewenvironment{center}{\setlength\topsep{0pt}\ogcenter}{\ogendcenter}%
+\begin{center}
+\begin{tblr}{
+    colspec={cllc@{ }c@{ }c@{ }c},
+    stretch=0,
+}
+  \toprule
+  Opcode&Assembly&Description&C&V&N&Z\\
+  \midrule
+  C&\texttt{mov \textit{dest},\textit{source}}
+  &Move\vphantom{g}&--&--&--&--\\
+  \midrule\SetCell[c=7]{c}{\footnotesize\strut
+    \textbf{Arithmetic}}\\\midrule
+  6&\texttt{add \textit{dest},\textit{source}}&Add\vphantom{g}
+  &\(\ast\)&\(\ast\)&\(\ast\)&\(\ast\)\\
+  7&\texttt{addc \textit{dest},\textit{source}}&Add with Carry
+  &\(\ast\)&\(\ast\)&\(\ast\)&\(\ast\)\\
+  8&\texttt{cmp \textit{dest},\textit{source}}&Compare
+  &\(\ast\)&\(\ast\)&\(\ast\)&\(\ast\)\\
+  31&\texttt{neg \textit{dest}[,\textit{source}]}
+  &Two's-Complement Negate Register
+  &\(\ast\)&\(\ast\)&\(\ast\)&\(\ast\)\\
+  4&\texttt{sub \textit{dest},\textit{source}}&Subtract\vphantom{g}
+  &\(\ast\)&\(\ast\)&\(\ast\)&\(\ast\)\\
+  5&\texttt{subb \textit{dest},\textit{source}}&Subtract with Borrow
+  &\(\ast\)&\(\ast\)&\(\ast\)&\(\ast\)\\
+  \midrule\SetCell[c=7]{c}{\footnotesize\strut
+    \textbf{Logic}}\\\midrule
+  A&\texttt{and \textit{dest},\textit{source}}
+  &Bitwise Logical AND&--&--&\(\ast\)&\(\ast\)\\
+  9&\texttt{or \textit{dest},\textit{source}}
+  &Bitwise Logical Inclusive-OR&--&--&\(\ast\)&\(\ast\)\\
+  B&\texttt{xor \textit{dest},\textit{source}}
+  &Bitwise Logical Exclusive-OR&--&--&\(\ast\)&\(\ast\)\\
+  \midrule\SetCell[c=7]{c}{\footnotesize\strut
+    \textbf{Rotations and Shifts}}\\\midrule
+  34/35&\texttt{asl \textit{dest},\textit{source}}
+  &Arithmetic Shift Left\vphantom{g}
+  &\(\ast\)&\(\ast\)&\(\ast\)&\(\ast\)\\
+  36/37&\texttt{asr \textit{dest},\textit{source}}
+  &Arithmetic Shift Right&\(\ast\)&0&\(\ast\)&\(\ast\)\\
+  32/33&\texttt{lsr \textit{dest},\textit{source}}
+  &Logical Shift Right&\(\ast\)&0&\(\ast\)&\(\ast\)\\
+  3C/3D&\texttt{rlc \textit{dest},\textit{source}}
+  &Rotate Left Through Carry&\(\ast\)&0&\(\ast\)&\(\ast\)\\
+  38/39&\texttt{rol \textit{dest},\textit{source}}
+  &Rotate Left\vphantom{g}&0&0&\(\ast\)&\(\ast\)\\
+  3A/3B&\texttt{ror \textit{dest},\textit{source}}
+  &Rotate Right&0&0&\(\ast\)&\(\ast\)\\
+  3E/3F&\texttt{rrc \textit{dest},\textit{source}}
+  &Rotate Right Through Carry&\(\ast\)&0&\(\ast\)&\(\ast\)\\
+  \midrule\SetCell[c=7]{c}{\footnotesize\strut
+    \textbf{Stack Operations}}\\\midrule
+  14&\texttt{pop \textit{dest}}&Pop from Stack&--&--&--&--\\
+  1A&\texttt{pspr \textit{dest}}&Read Program Stack Pointer
+  &--&--&--&--\\
+  1B&\texttt{psprw \textit{dest},\textit{source}}&
+  Read and Set Program Stack Pointer&--&--&--&--\\
+  19&\texttt{pspw \textit{dest}}&Set Program Stack Pointer
+  &--&--&--&--\\
+  10&\texttt{push \textit{source}}&Push to Stack\vphantom{g}
+  &--&--&--&--\\
+  \midrule\SetCell[c=7]{c}{\footnotesize\strut
+    \textbf{Control Flow}}\\\midrule
+  04--07&\texttt{ba[.\textit{cond}] \textit{address}}
+  &Branch Absolute\vphantom{g}&--&--&--&--\\
+  00--03&\texttt{br[.\textit{cond}] \textit{offset}}
+  &Branch Relative\vphantom{g}&--&--&--&--\\
+  08--0B&\texttt{call[.\textit{cond}] \textit{address}}
+  &Branch to Subroutine\vphantom{g}&--&--&--&--\\
+  0D\(x\)0&\texttt{ret[.\textit{cond}]}
+  &Return from Subroutine\vphantom{g}&--&--&--&--\\
+  0D\(x\)F&\texttt{rtp[.\textit{cond}]}
+  &System Return to Program&--&--&--&--\\
+  D&\texttt{trap[.\textit{cond}]}&Software Interrupt&--&--&--&--\\
+  \midrule\SetCell[c=7]{c}{\footnotesize\strut
+    \textbf{Status Register}}\\\midrule
+  28--2B&\texttt{andsr \textit{dest},\textit{source}}
+  &Logical AND into Status&\(\ast\)&\(\ast\)&\(\ast\)&\(\ast\)\\
+  20--23&\texttt{movsr \textit{dest},\textit{source}}
+  &Replace Status&\(\ast\)&\(\ast\)&\(\ast\)&\(\ast\)\\
+  24--27&\texttt{orsr \textit{dest},\textit{source}}
+  &Logical Inclusive-OR into Status
+  &\(\ast\)&\(\ast\)&\(\ast\)&\(\ast\)\\
+  2C--2F&\texttt{xorsr \textit{dest},\textit{source}}
+  &Logical Exclusive-OR into Status
+  &\(\ast\)&\(\ast\)&\(\ast\)&\(\ast\)\\
+  \bottomrule
+\end{tblr}
+\end{center}
+\clearpage
+\subsection*{Condition Codes}
+\begin{center}
+\begin{tabular}{cclll}
+  \toprule
+  Code&Name&Test&Alt\\\midrule
+  0000&&\(\top\)\\
+  0001&\texttt{u<}&\(\text{C}\)&\texttt{c}\\
+  0010&\texttt{v}&\(\text{V}\)\\
+  0011&\texttt{n}&\(\text{N}\)\\
+  0100&\texttt{=}&\(\text{Z}\)&\texttt{z}\\
+  0101&\texttt{u<=}&\(\text{C}\vee\text{Z}\)\\
+  0110&\texttt{s<}&\(\text{N}\oplus\text{V}\)\\
+  0111&\texttt{s<=}&\((\text{N}\oplus\text{V})\vee\text{Z}\)\\
+  \bottomrule
+\end{tabular}\qquad
+\begin{tabular}{cclll}
+  \toprule
+  Code&Name&Test&Alt\\\midrule
+  1000&\texttt{f}&\(\bot\)\\
+  1001&\texttt{u>=}&\(\neg\text{C}\)&\texttt{cc}\\
+  1010&\texttt{nv}&\(\neg\text{V}\)\\
+  1011&\texttt{p}&\(\neg\text{N}\)\\
+  1100&\texttt{!=}&\(\neg\text{Z}\)&\texttt{nz}\\
+  1101&\texttt{u>}&\(\neg\text{C}\wedge\neg\text{Z}\)\\
+  1110&\texttt{s>=}&\(\neg\text{N}\oplus\text{V}\)\\
+  1111&\texttt{s>}&\((\neg\text{N}\oplus\text{V})\wedge\neg\text{Z}\)\\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\subsection*{Registers}
+\begin{itemize}[noitemsep,topsep=0pt]
+\item \(\text{R}_0\)--\(\text{R}_{15}\): general purpose registers,
+  \(\text{R}_{15}\) is system (SSP) or program (PSP) stack pointer
+\item Flags: 
+  Carry (\(\text{SR}{:}3=\text{C}\)),
+  Overflow (\(\text{SR}{:}2=\text{V}\)),
+  Negative (\(\text{SR}{:}1=\text{N}\)),
+  Zero (\(\text{SR}{:}0=\text{Z}\))
+\end{itemize}\nointerlineskip
+
+\subsection*{Addressing Modes}
+\begin{center}
+\begin{tabular}{ccll}
+  \toprule
+  &Syntax&Mode&Meaning\\
+  \midrule
+  00&\(i\)&immediate&the given value \(i\)\\
+  01&R\({}_n\)&register direct&contents of register R\({}_n\)\\
+  10&(R\({}_n\))&register indirect&value in memory
+  addressed by R\({}_n\)\\
+  11&(R\({}_n+i\))&register indirect with offset
+  &value in memory addressed by R\({}_n+i\)\\
+  \bottomrule
+\end{tabular}\\
+R\({}_n\) is any general purpose register
+and \(i\) is an integer value.
+\end{center}
+
+\vspace*{\belowdisplayskip}%
+\noindent\begin{minipage}[t]{0.6\textwidth}
+\subsection*{Additional Assembly Tools}
+\begin{itemize}[noitemsep,topsep=0pt]
+\item \texttt{\textit{label}:\@ \textit{instruction}} --- assign label
+\item \texttt{dw \textit{num}[,\textit{num}\dots]} ---
+  insert 16-bit words
+\item \texttt{res \textit{num}} --- reserve \textit{num} words
+\item \texttt{/define \textit{name} \textit{num}}
+\item \texttt{/BSS} --- switch to BSS segment
+\item \texttt{@}, \texttt{@+\textit{n}}, and \texttt{@-\textit{n}} ---
+  \(\text{current location}\pm\text{\texttt{\textit{n}}}\)
+\item Semicolon (\texttt{;}) --- comment to end of line
+\item \texttt{\textquotesingle c\textquotesingle} characters
+  and \texttt{"string"} strings
+\end{itemize}\nointerlineskip
+
+\subsection*{Synthetic Instructions}
+\begin{center}
+  \begin{tabular}{lll}
+    \toprule
+    Instruction&Meaning&Equivalent\\
+    \midrule
+    \texttt{halt}&Stop Processor&\texttt{br @}\\
+    \texttt{nop}&No Operation&\texttt{br @+1}\\
+    \texttt{not \textit{d}}&Bitwise Logical NOT
+    &\texttt{xor \textit{d},0xFFFF}\\
+    \bottomrule
+  \end{tabular}
+\end{center}
+\end{minipage}%
+\begin{minipage}[t]{0.05\textwidth}\leavevmode\end{minipage}%
+\begin{minipage}[t]{0.35\textwidth}
+\subsection*{Sample Program}
+Multiply \(\text{R}_0\cdot\text{R}_1\) into \(\text{R}_0\).
+
+{\asmstyle
+\asmline{mov}{r2,1}\\
+\asmline{mov}{r3,r0}\\
+\asmline{xor}{r0,r0}\\
+\asmline[loop]{mov}{r4,r2}\\
+\asmline{and}{r4,r1}\\
+\asmline{br.z}{skip}\\
+\asmline{add}{r0,r3}\\
+\asmline[skip]{asl}{r3,1}\\
+\asmline{asl}{r2,1}\\
+\asmline{br.cc}{loop}}
+\end{minipage}%
+%
+\let\center\ogcenter
+\let\endcenter\ogendcenter
+\mainmatter\pagestyle{plain}
+
+\chapter{Architecture Overview}\label{ch:overview}
+The Subsettable Tiered Operations for Learning (\textsc{stol})
+architecture provides a simple \textsc{cisc} instruction set.
+It is intended to be implemented in an educational setting,
+beginning with a core of single-cycle instructions,
+then progressing to add the state machine required
+to support advanced features such as
+memory access and more addressing modes.
+
+\section{Programmer's Model}
+The \textsc{stol} architecture provides a two-address instruction set
+with a variety of addressing modes.
+There are two operating modes: system mode, and program mode.
+At reset, the processor begins in system mode.
+However, most programs are generally expected
+to be run in the less privileged program mode.
+
+\subsection{Registers}
+There are sixteen 16-bit general-purpose registers,
+named \(\text{R}_0\)--\(\text{R}_{15}\),
+where \(\text{R}_{15}\) is also known as SP, the stack pointer.
+The program counter (PC) indicates the current location,
+and the status register (SR) holds the active condition codes.
+Only the low four bits of the status register are writable.
+The user's model is shown in Figure~\ref{fig:user-reg}.
+
+The system programmer's model includes two supplementary registers.
+In system mode, the program stack pointer (PSP)
+is shadowed by the system stack pointer (SSP)
+as register \(\text{R}_{15}\).
+The distinction is made so that user programs
+can freely manipulate all sixteen general-purpose registers
+without risk to an operating system.
+Special instructions exist to allow system code
+to access and manipulate the PSP as well.
+Further, the upper bits of the status register,
+which include the operating mode,
+interrupt nesting level and active interrupt mask,
+become writable.
+These additional features are shown in Figure~\ref{fig:sys-reg}.
+
+\subsection{Initial State}
+At reset, the program counter is zero
+and the processor is in system mode at nesting level zero.
+No further assumptions may be made.
+Namely, the general-purpose registers,
+the stack pointers,
+and the remainder of the status register are in an indeterminate state.
+
+\begin{figure}\centering
+  \begin{tabular}{rll}
+    \(\overbrace{\framebox[2in]{\vphantom{o}}}^{\text{16 bits}}\)
+    &\(\text{R}_0\)\\
+    \framebox[2in]{\vphantom{o}}&\(\text{R}_1\)\\
+    \framebox[2in]{\vphantom{o}}&\(\text{R}_2\)\\
+    \framebox[2in]{\vphantom{o}}&\(\text{R}_3\)\\
+    \framebox[2in]{\vphantom{o}}&\(\text{R}_4\)\\
+    \framebox[2in]{\vphantom{o}}&\(\text{R}_5\)\\
+    \framebox[2in]{\vphantom{o}}&\(\text{R}_6\)\\
+    \framebox[2in]{\vphantom{o}}&\(\text{R}_7\)
+    &General purpose registers\\
+    \framebox[2in]{\vphantom{o}}&\(\text{R}_8\)\\
+    \framebox[2in]{\vphantom{o}}&\(\text{R}_9\)\\
+    \framebox[2in]{\vphantom{o}}&\(\text{R}_{10}\)\\
+    \framebox[2in]{\vphantom{o}}&\(\text{R}_{11}\)\\
+    \framebox[2in]{\vphantom{o}}&\(\text{R}_{12}\)\\
+    \framebox[2in]{\vphantom{o}}&\(\text{R}_{13}\)\\
+    \framebox[2in]{\vphantom{o}}&\(\text{R}_{14}\)\\
+    \\
+    \framebox[2in]{\vphantom{o}}&SP&Program stack pointer\\
+    \\
+    \framebox[2in]{\vphantom{o}}&PC&Program counter\\
+    \\
+    \(\underbrace{\framebox[0.5in]{\vphantom{o}}}_{\text{4 bits}}\)
+    &SR&Condition codes\\
+  \end{tabular}
+  \caption{User Programmer's Model}
+  \label{fig:user-reg}
+\end{figure}
+
+\begin{figure}\centering
+  \begin{tabular}{rll}
+    \(\overbrace{\framebox[2in]{\vphantom{o}}}^{\text{16 bits}}\)
+    &SSP&System stack pointer\\
+    \\
+    \framebox[1.5in]{\vphantom{o}}\(\underbrace{\framebox[0.5in]{\hss\vphantom{o}\smash{\footnotesize cond}\hss}}_{\text{4 bits}}\)&SR
+    &Status Register\\
+  \end{tabular}
+  \caption{Supplements in the System Programmer's Model}
+  \label{fig:sys-reg}
+\end{figure}
+
+\subsection{Flags and Conditions}
+The status register is depicted in Figure~\ref{fig:sr}.
+The four bits stored in the condition code portion
+of the status register are as follows:
+zero (\(\text{Z}=\text{SR}{:}0\)),
+set if the result of an operation is zero,
+negative (\(\text{N}=\text{SR}{:}1\)),
+set if the result of an operation has its most-significant bit set
+and is thus negative in two's complement signed interpretation,
+overflow (\(\text{V}=\text{SR}{:}2\)),
+set if the result of an arithmetic operation
+exceeded the available precision and is incorrect
+under a signed interpretation,
+and carry (\(\text{C}=\text{SR}{:}3\)),
+the unsigned analog of signed overflow.
+Not all operations affect all flags;
+see the individual instruction listings for full detail.
+
+\begin{figure}[htb]\centering
+  \encoding{S&\multicolumn{3}{c}{\cellcolor{.!20}}%
+    &\multicolumn{4}{|c|}{Nest}&\cellcolor{.!20}
+    &\multicolumn{3}{c|}{Mask}&C&V&N&Z}\\
+  \begin{tabular}{r@{: }l}
+    S&Program mode (0) or system mode (1)\\
+    Mask&Minimum interrupt priority for service\\
+    Nest&Interrupt nesting level\\
+    CVNZ&Condition flags
+  \end{tabular}
+  \caption{The Status Register}
+  \label{fig:sr}
+\end{figure}
+
+All control-flow instructions are conditionally executed.
+If the indicated condition is not satisfied,
+then the instruction is passed over without effect.
+The condition codes are summarized in Table~\ref{tbl:cond}.
+Each of the four condition flags can be queried individually,
+and tests are provided for each of the six mathematical comparisons
+(\(<\), \(\leq\), \(=\), \(\geq\), \(>\), and \(\neq\))
+for both signed and unsigned interpretations.
+Additionally, there are codes to unconditionally
+execute or skip the instruction.
+
+\begin{table}[htb]\centering
+  \caption{Condition Codes}
+  \label{tbl:cond}
+  \begin{tabular}{cclll}
+    \toprule
+    Code&Name&Test&Alt\\\midrule
+    0000&&\(\top\)\\
+    0001&\texttt{u<}&\(\text{C}\)&\texttt{c}\\
+    0010&\texttt{v}&\(\text{V}\)\\
+    0011&\texttt{n}&\(\text{N}\)\\
+    0100&\texttt{=}&\(\text{Z}\)&\texttt{z}\\
+    0101&\texttt{u<=}&\(\text{C}\vee\text{Z}\)\\
+    0110&\texttt{s<}&\(\text{N}\oplus\text{V}\)\\
+    0111&\texttt{s<=}&\((\text{N}\oplus\text{V})\vee\text{Z}\)\\
+    \bottomrule
+  \end{tabular}\qquad
+  \begin{tabular}{cclll}
+    \toprule
+    Code&Name&Test&Alt\\\midrule
+    1000&\texttt{f}&\(\bot\)\\
+    1001&\texttt{u>=}&\(\neg\text{C}\)&\texttt{cc}\\
+    1010&\texttt{nv}&\(\neg\text{V}\)\\
+    1011&\texttt{p}&\(\neg\text{N}\)\\
+    1100&\texttt{!=}&\(\neg\text{Z}\)&\texttt{nz}\\
+    1101&\texttt{u>}&\(\neg\text{C}\wedge\neg\text{Z}\)\\
+    1110&\texttt{s>=}&\(\neg\text{N}\oplus\text{V}\)\\
+    1111&\texttt{s>}&\((\neg\text{N}\oplus\text{V})\wedge\neg\text{Z}\)\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Memory System}
+The \textsc{stol} system is designed as a Princeton architecture,
+with instruction memory and data memory sharing
+the same buses and address space.
+Up to 64K words (128KB) of memory can be addressed at a time.
+The memory at address zero should be non-volatile,
+as this is the initial program counter upon reset.
+The stack pointers should be placed
+such that pushing a value will use writable memory.
+
+The initial segment of memory must be nonvolatile,
+as execution begins at address zero upon reset.
+Additionally, the interrupt handling mechanism
+executes the contents of memory from locations 0x00E0--0x00F0.
+Therefore, the recommended memory configuration
+has a system boot \textsc{rom} spanning addresses 0x0000--0x00FF,
+followed by \textsc{ram} spanning addresses 0x0100--0x7FFF,
+and main program memory spanning addresses 0x8000--0xFFFF.
+The main program memory might be \textsc{rom} for fixed-program systems,
+or \textsc{ram} for systems that load programs from external memory.
+If the system should be connected to external \textsc{i/o} devices,
+these devices should be memory-mapped and shadow \textsc{ram},
+perhaps dedicating address 0x0100--0x200 for this purpose.
+
+\subsection{Data Addressing Modes}
+Most instructions specify a source operand
+and a destination operand.
+In order to express programs compactly,
+four addressing modes are provided.
+
+Immediate mode comes in two variants.
+Short, nonzero immediate values (1--15, inclusive)
+can be directly encoded into the instruction word.
+Other values must be encoded as an extension word.
+In either case, this data is used directly as the operand.
+As this is not writable,
+this addressing mode is illegal for destinations.
+All others are generally legal.
+
+Register-direct mode uses the contents of a general-purpose register
+as the operand.
+
+Register-indirect mode uses the contents of a general-purpose register
+as a pointer into memory.
+The contents of this memory location are then used as the operand.
+
+Register-indirect with offset mode
+embeds the offset as an extension word.
+The sum of this offset with the contents of a general-purpose register
+is used as a pointer into memory,
+and the contents of this memory location are then used as the operand.
+
+These modes are summarized in Table~\ref{tbl:addr-modes}.
+If both the source operand and the destination operand
+require an extension word,
+the source precedes the destination.
+
+\begin{table}[htb]\centering
+  \caption{Data Addressing Modes}
+  \label{tbl:addr-modes}
+  \begin{tabular}{ccll}
+    \toprule
+    &Syntax&Mode&Meaning\\
+    \midrule
+    00&\(i\)&immediate&the given value \(i\)\\
+    01&R\({}_n\)&register direct&contents of register R\({}_n\)\\
+    10&(R\({}_n\))&register indirect&value in memory
+    addressed by R\({}_n\)\\
+    11&(R\({}_n+i\))&register indirect with offset
+    &value in memory addressed by R\({}_n+i\)\\
+    \bottomrule
+  \end{tabular}\\
+  R\({}_n\) is any general purpose register
+  and \(i\) is an integer value.
+\end{table}
+
+Some instructions implicitly refer to the program counter,
+status register, or program stack pointer.
+These instructions along with their implicit references
+are listed in Table~\ref{tbl:implicit-refs}.
+
+\begin{table}[htb]
+  \caption{Instructions with Implicit References}
+  \label{tbl:implicit-refs}
+  \centering
+  \begin{tabular}{rcl}
+    \toprule
+    Instruction&&Implied Register(s)\\
+    \midrule
+    Logical AND into Status&\texttt{ANDSR}&SR\\
+    Branch Absolute&\texttt{BA}&PC\\
+    Branch Relative&\texttt{BR}&PC\\
+    Branch to Subroutine&\texttt{CALL}&PC, SP\\
+    Replace Status&\texttt{MOVSR}&SR\\
+    Logical Inclusive-OR into Status&\texttt{ORSR}&SR\\
+    Pop from Stack&\texttt{POP}&SP\\
+    Read Program Stack Pointer&\texttt{PSPR}&PSP\\
+    Set and Read Program Stack Pointer&\texttt{PSPRW}&PSP\\
+    Set Program Stack Pointer&\texttt{PSPW}&PSP\\
+    Push to Stack&\texttt{PUSH}&SP\\
+    Return from Subroutine&\texttt{RET}&PC, SP\\
+    Return to Program&\texttt{RTP}&PC, PSP, SSP\\
+    Software Interrupt&\texttt{TRAP}&PC, SSP\\
+    Logical Exclusive-OR into Status&\texttt{XORSR}&SR\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Interrupt Processing}
+External interrupts are available in eight priority levels.
+By manipulating the status register,
+the minimum priority level can be set anywhere from 0--7.
+This means that priority levels 0--6 can be masked away,
+while level 7 is non-maskable.
+At the beginning of instruction processing,
+the system detects whether an unmasked interrupt is requested.
+If so, then instead of executing the current instruction,
+the interrupt is handled.
+
+This proceeds as follows.
+First, the processor enters system mode
+and increments the current interrupt nesting level.
+Then, the program counter is pushed to the system stack,
+and execution proceeds at address \(224+2p\),
+where \(p\) is the priority level of the interrupt.
+The interrupt is then acknowledged.
+As there are only two words available per priority level,
+generally these locations should contain
+either a \texttt{HALT} instruction to stop the processor,
+an \texttt{RTP} instruction to ignore the interrupt,
+or a branch to another location for further processing.
+
+Additionally, program software may raise an internal interrupt
+by using a \texttt{TRAP} instruction.
+There are eight software interrupts available.
+Servicing follows the same pattern as external interrupts,
+except that the external acknowledge pin is not asserted,
+and execution proceeds at address \(240+2v\)
+where \(v\) is the interrupt number.
+
+To simplify the implementation,
+interrupt processing does not duplicate the status register
+before entering system mode and executing the appropriate handler.
+Returning from an interrupt handler to a user program
+should exit system mode.
+This combination means that nested interrupts
+cannot be safely handled without additional work.
+The \textsc{stol} architecture uses a portion of the status register
+to indicate the current nesting level,
+to determine whether to retain system privileges.
+Due to the limited size of this field,
+up to sixteen nested interrupts can be safely processed.
+If it overflows, the processor may relinquish privileges prematurely.
+
+As interrupts may occur at any time,
+including at arbitrary points during the processing of user programs,
+it is important that interrupt handler routines
+preserve essential state.
+If any registers or condition codes are modified,
+the relevant data should be pushed to the stack upon entry
+and popped upon exit.
+In system mode, the entire status register is writable,
+but it is generally a bad idea to modify
+the mode bit or interrupt nesting level bits
+outside of special circumstances.
+
+\section{Recommended Startup Procedure}
+The initial boot code should
+configure the program and system stack pointers,
+and initialize any external hardware.
+To leave system mode and enter a program,
+push the target address and issue an \texttt{RTP} instruction.
+The following sample code initializes
+the program stack pointer to 0x7000
+and the system stack pointer to 0x8000,
+then enters a target program at address 0x8000.
+This should be sufficient for any system
+that needs no external device setup
+and which follows
+the recommended memory configuration
+with fixed program \textsc{rom} in the upper half of memory.
+
+\begin{quote}\asmstyle
+\asmline{mov}{sp,0x7000}; c4f0 7000\\
+\asmline{pspw}{sp}; 190f\\
+\asmline{mov}{sp,0x8000}; c4f0 8000\\
+\asmline{push}{sp}; 110f\\
+\asmline{rtp}{}; 0d0f
+\end{quote}
+
+
+\chapter{Binary Numbers and Arithmetic}\label{ch:arith}
+This chapter introduces the arithmetic instructions
+available in the \textsc{stol} architecture.
+For information on the assembly language format,
+see Appendix~\ref{ch:asm}.
+For a complete instruction listing, see Appendix~\ref{ch:isa}.
+
+Decimal numbers use digits that range in value from 0--9.
+This is a \concept{positional number system}
+(also called a \emph{place--value} system),
+where the value contributed by a digit corresponds to its location.
+The number 329 represents three hundreds plus two tens plus nine,
+\(300+20+9\).
+That is, \(3\cdot 10^2 + 2\cdot 10^1 + 9\cdot 10^0\).
+The most-significant digit is the leftmost,
+and the least-significant digit is the rightmost.
+As computers tend to work with signals
+that have just two states, either \emph{off} or \emph{on},
+numbers are more naturally represented with just two kinds of digit:
+0 and 1.
+In the decimal system, positions are valued in powers of ten,
+while in the binary system, they are valued in powers of two.
+
+\section{Addition}
+When two numbers are added,
+the addition proceeds one place at a time,
+from the least-significant position up through the most-significant.
+If the sum is larger than will fit in a digit,
+the number of available digits (10 for decimal) is subtracted
+and an additional 1 is \concept[carry]{carried} into the next position:
+\begin{center}
+\begin{tabular}{ccccc}
+   &\textcolor{.!50}{\footnotesize1}&&\textcolor{.!50}{\footnotesize1}&\\
+   & &3&2&9\\
+  +& &8&5&3\\\cline{2-5}
+   &1&\llap{\raisebox{3pt}{\textcolor{.!50}{\footnotesize 1}}}1
+   &8&\llap{\raisebox{3pt}{\textcolor{.!50}{\footnotesize 1}}}2
+\end{tabular}
+\end{center}
+The same applies to binary numbers,
+except that the largest possible digit is 1.
+\begin{center}
+\begin{tabular}{cccccl}
+  &\textcolor{.!50}{\footnotesize1}
+  &\textcolor{.!50}{\footnotesize1}
+  &\textcolor{.!50}{\footnotesize1}&\\
+   & &1&0&1&\({}=4+1=5\)\\
+  +& &1&1&1&\({}=4+2+1=7\)\\\cline{2-5}
+  &1
+  &\llap{\raisebox{3pt}{\textcolor{.!50}{\footnotesize 1}}}1
+  &\llap{\raisebox{3pt}{\textcolor{.!50}{\footnotesize 1}}}0
+  &\llap{\raisebox{3pt}{\textcolor{.!50}{\footnotesize 1}}}0
+\end{tabular}
+\end{center}
+
+In the \textsc{stol} architecture,
+all numbers involved have 16 positions.
+Every addition takes two numbers with 16 positions as input
+and returns a number with 16 positions as output.
+This is called \concept{single-precision} arithmetic.
+What it means is that adding particularly large numbers
+might exceed the available precision and yield a result
+that differs from the mathematically correct sum.
+If a one is carried out of the most-significant position,
+this is tracked by the system in the \concept[carry!flag]{carry flag}.
+\begin{center}
+  \begin{tabular}{cccccccccccccccccc}
+      & 
+    &\textcolor{.!50}{\footnotesize 1}
+    &\textcolor{.!50}{\footnotesize 1}
+    &\textcolor{.!50}{\footnotesize 1}
+    &\textcolor{.!50}{\footnotesize 1}
+    &
+    &\textcolor{.!50}{\footnotesize 1}
+    &
+    &\textcolor{.!50}{\footnotesize 1}
+    &\textcolor{.!50}{\footnotesize 1}
+    &\textcolor{.!50}{\footnotesize 1}
+    &\textcolor{.!50}{\footnotesize 1}
+    &\textcolor{.!50}{\footnotesize 1}
+    &\textcolor{.!50}{\footnotesize 1}
+    &\textcolor{.!50}{\footnotesize 1}
+    &&\\
+      &&1&1&1&1&1&0&1&0&1&1&0&0&1&1&1&0\\
+    C&+&1&1&0&0&1&0&1&0&1&1&1&1&1&1&1&0\\\cline{3-18}
+    \fbox{1}& 
+    &\llap{\raisebox{3pt}{\textcolor{.!50}{\footnotesize 1}}}1
+    &\llap{\raisebox{3pt}{\textcolor{.!50}{\footnotesize 1}}}1
+    &\llap{\raisebox{3pt}{\textcolor{.!50}{\footnotesize 1}}}0
+    &\llap{\raisebox{3pt}{\textcolor{.!50}{\footnotesize 1}}}0
+    &\llap{\raisebox{3pt}{\textcolor{.!50}{\footnotesize 1}}}0
+    &1
+    &\llap{\raisebox{3pt}{\textcolor{.!50}{\footnotesize 1}}}0
+    &1
+    &\llap{\raisebox{3pt}{\textcolor{.!50}{\footnotesize 1}}}1
+    &\llap{\raisebox{3pt}{\textcolor{.!50}{\footnotesize 1}}}1
+    &\llap{\raisebox{3pt}{\textcolor{.!50}{\footnotesize 1}}}0
+    &\llap{\raisebox{3pt}{\textcolor{.!50}{\footnotesize 1}}}0
+    &\llap{\raisebox{3pt}{\textcolor{.!50}{\footnotesize 1}}}1
+    &\llap{\raisebox{3pt}{\textcolor{.!50}{\footnotesize 1}}}1
+    &\llap{\raisebox{3pt}{\textcolor{.!50}{\footnotesize 1}}}0
+    &0
+  \end{tabular}
+\end{center}
+
+\begin{quote}\asmstyle
+\asmline{mov}{r0,42}\\
+\asmline{mov}{r1,78}\\
+\asmline{add}{r0,r1}; r0 correctly contains 120\\
+\asmline{mov}{r0,64206}\\
+\asmline{mov}{r1,51966}\\
+\asmline{add}{r0,r1}; r0 holds 50636 instead of 116172
+\end{quote}
+
+The ``add with carry'' instruction,
+``\texttt{addc \textit{destination},\textit{source}}'',
+enables higher-precision arithmetic
+by treating another source/destination pair
+as a continuation of the operands,
+adding in the value of the carry flag alongside the first,
+least-significant position.
+The highest possible number that can be represented in sixteen positions
+is 65,535,
+so a value used as a continuation is worth 65,536 times
+its actual value.
+
+\begin{quote}\asmstyle
+\asmline{mov}{r0,64206}\\
+\asmline{mov}{r1,0}; continuing r0\\
+\asmline{mov}{r2,51966}\\
+\asmline{mov}{r3,0}; continuing r2\\
+\asmline{add}{r0,r2}; r0 holds 50636 instead of 116172, C set\\
+\asmline{addc}{r1,r3}; r1 holds 1; 50636 + 1\({}\cdot{}\)65536 = 116172
+\end{quote}
+
+Using just one continuation value
+is \concept{double-precision} arithmetic.
+Rather than just 16 positions per value,
+32 positions are available.
+This pattern extends to higher precision:
+add from least-significant up through most-significant,
+accounting for the carry flag on all additions except for the first.
+However, with particularly large numbers,
+one may struggle to fit them into the available registers.
+Using an indirect addressing mode can alleviate this concern.
+For instance, one can add two quadruple-precision numbers
+\(x\) stored at \texttt{\textit{xaddr}} and
+\(y\) stored at \texttt{\textit{yaddr}} as follows:
+
+\begin{quote}\asmstyle
+\asmline{mov}{r0,\textit{xaddr}}\\
+\asmline{mov}{r1,\textit{yaddr}}\\
+\asmline{add}{(r0),(r1)}\\
+\asmline{addc}{(r0+1),(r1+1)}\\
+\asmline{addc}{(r0+2),(r1+2)}\\
+\asmline{addc}{(r0+3),(r1+3)}
+\end{quote}
+
+\section{Signed Numbers \& Two's-Complement Negation}
+To this point, discussion has centered on \concept{unsigned arithmetic}.
+However, sometimes it is useful to represent negative numbers.
+Given a number \(n\), its negation, \(-n\),
+is the number that must be added to it in order to reach zero.
+Consider adding \(n\)
+to the number \(n^{\prime}\) obtained from \(n\)
+by exchanging 0 and 1 in each position.
+In this addition,
+every position will result in a sum of 1
+with no carry into the next position.
+That is, the result will be the number where all positions are 1.
+Adding 1 into this result will yield a sum of 0 in the first position
+with a carry into the next.
+This next position then also yields a sum of 0 and a carry,
+and this continues until the addition is complete;
+the final sum is 0 with the carry flag set.
+In some sense, \(n^{\prime}\) is \(-n\).
+
+\begin{figure}[ht!]\centering
+  \begin{tabular}{cccccccccccccccccc}
+    &&1&1&1&1&1&0&1&0&1&1&0&0&1&1&1&0\\
+    &&\multicolumn{16}{c}{\(\downarrow\)\rlap{~flip each position}}\\
+    & & & & & & & & & & & & & & & &\textcolor{.!50}{\footnotesize 1}&\\
+    & &0&0&0&0&0&1&0&1&0&0&1&1&0&0&0&1\\
+    &+&0&0&0&0&0&0&0&0&0&0&0&0&0&0&0&1\\\cline{3-18}
+    & &0&0&0&0&0&1&0&1&0&0&1&1&0&0&1
+    &\llap{\raisebox{3pt}{\textcolor{.!50}{\footnotesize 1}}}0\\
+    \\
+    & &\multicolumn{16}{c}{verify}\\
+    &
+    &\textcolor{.!50}{\footnotesize 1}
+    &\textcolor{.!50}{\footnotesize 1}
+    &\textcolor{.!50}{\footnotesize 1}
+    &\textcolor{.!50}{\footnotesize 1}
+    &\textcolor{.!50}{\footnotesize 1}
+    &\textcolor{.!50}{\footnotesize 1}
+    &\textcolor{.!50}{\footnotesize 1}
+    &\textcolor{.!50}{\footnotesize 1}
+    &\textcolor{.!50}{\footnotesize 1}
+    &\textcolor{.!50}{\footnotesize 1}
+    &\textcolor{.!50}{\footnotesize 1}
+    &\textcolor{.!50}{\footnotesize 1}
+    &\textcolor{.!50}{\footnotesize 1}
+    &\textcolor{.!50}{\footnotesize 1}
+    &&\\
+     & &1&1&1&1&1&0&1&0&1&1&0&0&1&1&1&0\\
+    C&+&0&0&0&0&0&1&0&1&0&0&1&1&0&0&1&0\\\cline{3-18}
+    \fbox{1}
+    &
+    &\llap{\raisebox{3pt}{\textcolor{.!50}{\footnotesize 1}}}0
+    &\llap{\raisebox{3pt}{\textcolor{.!50}{\footnotesize 1}}}0
+    &\llap{\raisebox{3pt}{\textcolor{.!50}{\footnotesize 1}}}0
+    &\llap{\raisebox{3pt}{\textcolor{.!50}{\footnotesize 1}}}0
+    &\llap{\raisebox{3pt}{\textcolor{.!50}{\footnotesize 1}}}0
+    &\llap{\raisebox{3pt}{\textcolor{.!50}{\footnotesize 1}}}0
+    &\llap{\raisebox{3pt}{\textcolor{.!50}{\footnotesize 1}}}0
+    &\llap{\raisebox{3pt}{\textcolor{.!50}{\footnotesize 1}}}0
+    &\llap{\raisebox{3pt}{\textcolor{.!50}{\footnotesize 1}}}0
+    &\llap{\raisebox{3pt}{\textcolor{.!50}{\footnotesize 1}}}0
+    &\llap{\raisebox{3pt}{\textcolor{.!50}{\footnotesize 1}}}0
+    &\llap{\raisebox{3pt}{\textcolor{.!50}{\footnotesize 1}}}0
+    &\llap{\raisebox{3pt}{\textcolor{.!50}{\footnotesize 1}}}0
+    &\llap{\raisebox{3pt}{\textcolor{.!50}{\footnotesize 1}}}0
+    &\llap{\raisebox{3pt}{\textcolor{.!50}{\footnotesize 1}}}0
+    &0
+  \end{tabular}
+  \caption{Negation}
+  \label{fig:neg}
+\end{figure}
+
+By convention, when a number is treated as a signed number,
+the most-significant bit is treated as a \emph{negative indicator},
+a sign:
+if it is 1 then the number is negative;
+otherwise it is nonnegative.
+It turns out that in this interpretation,
+computing the value of the number
+is as simple as treating the most-significant bit
+as being worth the negative of its usual value.
+So instead of the most-significant bit being worth \(2^{15}=32768\),
+it is instead worth \(-2^{15}=-32768\).
+Unsigned 16-position numbers range in value from 0 through 65,535,
+while signed 16-position numbers range from \(-\)32,768 through 32,767.
+This is called the \concept{two's complement} representation,
+because in effect it computes \(-n\) as \(2^{16}-n\).
+
+The instruction ``\texttt{neg \textit{destination},\textit{source}}''
+places the negation of the \texttt{\textit{source}} operand
+into \texttt{\textit{destination}}.
+
+\section{Subtraction}
+To compute the subtraction \(a-b\),
+one can compute the addition \(a+(-b)\).
+If \(b^{\prime}\) is the number obtained
+by flipping each position of \(b\),
+this is \(a+b^{\prime}+1\).
+Using this computation,
+the carry flag will be set whenever
+the unsigned interpretation of \(a\)
+is greater than or equal to that of \(b\).
+To extend this to higher precision,
+notice that the carry flag indicates that \emph{no borrow} is needed;
+if the carry flag is unset,
+then a one needed to be borrowed out of the least-significant position
+of the continuation,
+so the computation is only \(a+b^{\prime}\).
+If the carry flag is set,
+then no borrow was needed and the computation is \(a+b^{\prime}+1\).
+In other words, subtraction with carry is \(a+b+\text{C}\),
+where C is the carry flag.
+
+However,
+the \textsc{stol} architecture internally swaps the state
+of the carry flag into and out of a subtraction operation,
+for reasons that will be elaborated in the next section.
+That is, rather than treating it as a ``not borrow'' indicator,
+the flag is treated as a ``borrow'' indicator.
+Both conventions are widely used by various architectures.
+Subtraction with and without borrow are computed with the
+``\texttt{subb \textit{destination},\textit{source}}''
+and
+``\texttt{sub \textit{destination},\textit{source}}''
+instructions, respectively.
+
+\section{Overflow}
+The carry flag is used to indicate when the result
+is not mathematically correct for the \emph{unsigned} interpretation
+of the operation.
+Note that this means that negation
+sets the carry flag for \emph{all} nonzero values,
+as negative numbers cannot be represented as unsigned values.
+This is why the carry flag is inverted internally
+to be treated as ``borrow'' when doing subtraction operations.
+An additional flag, overflow (\(\text{V}=\text{SR}{:}2\)),
+indicates when the result is not mathematically correct
+for the \emph{signed} interpretation of the operation.
+When the mathematically correct result exceeds 32,767
+or falls below \(-\)32,768,
+the overflow flag will be set.
+
+When performing an addition between numbers of opposite signs,
+overflow can never occur.
+But when both inputs are positive,
+in order to be correct, the sum must be less than 32,768.
+The sum of the largest positive signed number (32,767)
+with itself is 65,534, so there will never be a \emph{carry} out.
+This means that the sum of two positive numbers results in overflow
+only when the result is negative.
+Similarly, an overflow results from adding two negative numbers
+only when the result is positive.
+In short, overflow occurs when the inputs have the same sign
+and the result has the opposite sign.
+For the subtraction \(a-b\),
+overflow is computed as it would be for \(a+(-b)\).
+
+Note that the two's complement representation
+ensures that even higher-precision arithmetic
+works identically for signed and unsigned values,
+with the only difference being whether the programmer
+should investigate the carry flag or the overflow flag
+after the final step in the operation.
+Internal steps use only the carry flag in either case.
+
+\section{Other Flags}
+The negative (\(\text{N}=\text{SR}{:}1\)) flag
+is set when the most-significant bit of a result is set,
+when the result is negative under signed interpretation.
+The zero (\(\text{Z}=\text{SR}{:}0\)) flag
+is set when the result is zero.
+
+\section{Comparisons}
+After performing the subtraction operation
+``\texttt{sub \textit{a},\textit{b}}'',
+the condition codes are set to properly reflect
+how \texttt{\textit{a}} compares to \texttt{\textit{b}}.
+Each of the six mathematical comparisons
+(\(<\), \(\leq\), \(=\), \(\geq\), \(>\), and \(\neq\))
+is available through one of the condition codes
+for both signed and unsigned interpretations.
+Importantly, this operation also modifies \texttt{\textit{a}}.
+An instruction is provided to compute the flags in the same way
+but leave \texttt{\textit{a}} intact:
+\texttt{cmp a,b}.
+
+\section{Other Operations}
+It is left as an exercise to determine
+how to compute higher-precision variants of other operations
+such as ``negate'',
+or operations that are not even provided in single-precision
+form such as multiplication and division.
+The advantage of the two's complement representation
+is that addition and subtraction are computed
+by the same operation whether the operands
+are to be treated as signed values or as unsigned values.
+However, this is not necessarily the case for other operations.
+For instance, signed and unsigned multiplication differ
+if computed to full precision.
+
+\begin{table}[ht!]\centering
+  \caption{Arithmetic Instructions}
+  \label{tbl:arith}
+  \begin{tabular}{lcl}
+    \toprule
+    \rlap{Encoding}&&Instruction\\\midrule
+    \texttt{6\textit{m}\textit{d}\textit{s}}
+    &\texttt{ADD}&Add\\
+    \texttt{7\textit{m}\textit{d}\textit{s}}
+    &\texttt{ADDC}&Add with Carry\\
+    \texttt{31\textit{d}\textit{s}}
+    &\texttt{NEG}&Two's-Complement Negate Register\\
+    \texttt{4\textit{m}\textit{d}\textit{s}}
+    &\texttt{SUB}&Subtract\\
+    \texttt{5\textit{m}\textit{d}\textit{s}}
+    &\texttt{SUBB}&Subtract with Borrow\\
+    \texttt{8\textit{m}\textit{d}\textit{s}}
+    &\texttt{CMP}&Compare\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+
+\chapter{Bit Manipulation \& Boolean Logic}\label{ch:ops}
+This chapter describes logical operations
+and the \textsc{stol} operations that compute them.
+The fundamental unit is the \concept{bit} (binary digit),
+which may be either set (1, true) or cleared (unset, 0, false).
+Occasionally, base-16 \concept[hexadecimal]{hexadecimal notation}
+will be used,
+as conversion between binary and hexadecimal
+is only a matter of grouping bits:
+\begin{center}
+  \begin{tabular}{cccccccccccccccc}
+    0&1&2&3&4&5&6&7\\
+    0000&0001&0010&0011&0100&0101&0110&0111\\
+    \\
+    8&9&A&B&C&D&E&F\\
+    1000&1001&1010&1011&1100&1101&1110&1111
+  \end{tabular}
+\end{center}
+Hexadecimal numbers are indicated by the prefix ``0x''.
+For example, the number 0xFACE represents 1111\,1010\,1100\,0000.
+The most-significant bit is sometimes also called the sign-bit,
+due to its meaning in signed interpretation of numbers.
+
+\section{Data Movement Operation}
+The primary instruction for copying data between locations
+is ``\texttt{mov \textit{destination},\textit{source}}''.
+This allows for transfer between general-purpose registers,
+between one general-purpose register and main memory,
+or from a directly provided integer
+into either a general-purpose register or main memory.
+Special instructions are provided for managing other registers.
+
+\section{Logical AND}
+The logical AND of two given bits \(a\) and \(b\),
+written \(a\wedge b\),
+is set if both \(a\) and \(b\) are set;
+otherwise it is cleared.
+The \texttt{AND} instruction,
+``\texttt{and \textit{destination},\textit{source}}'',
+computes this operation in parallel
+bit-by-bit between its destination and source operands,
+then stores the result back into the destination.
+
+\begin{figure}[ht!]\centering
+  \begin{tabular}{cccccc}
+              &\dots&1&1&0&0\\
+    \(\wedge\)&\dots&1&0&1&0\\\cline{2-6}
+              &\dots&1&0&0&0
+  \end{tabular}
+  \caption{Bitwise Logical AND Operation}
+  \label{fig:and}
+\end{figure}
+
+The C and V flags are never modified by this instruction.
+The N flag is set if the most-significant bit of the result is set,
+and the Z flag is set if no bits are set in the result.
+
+The \texttt{AND} instruction has two main uses.
+First, it can clear specified bits in the destination
+by using a source where all bits are set
+except for the specified bits.
+For example, the instruction ``\texttt{and r0,0xFFFE}''
+will clear the least-significant bit of register \(\text{R}_0\).
+Second, it can be used to test if a specific bit is set in a source,
+by using a destination where all bits are cleared
+except for the one to test.
+For example, to test whether the most-significant bit
+of register \(\text{R}_0\) is set,
+one can first issue the instruction
+``\texttt{mov r1,0x8000}'' to set up the destination,
+and then use ``\texttt{and r1,r0}''.
+The Z flag will be cleared if that most-significant bit is set.
+When the destination has multiple bits set,
+the Z flag is cleared if \emph{any} of the specified bits
+are set in the source.
+
+\section{Logical Inclusive-OR}
+The logical inclusive-OR of two given bits \(a\) and \(b\),
+written \(a\vee b\),
+is set if \(a\) is set, or if \(b\) is set, or both;
+otherwise it is cleared.
+The \texttt{OR} instruction,
+``\texttt{or \textit{destination},\textit{source}}'',
+computes this operation in parallel
+bit-by-bit between its destination and source operands,
+then stores the result back into the destination.
+
+\begin{figure}[ht!]\centering
+  \begin{tabular}{cccccc}
+              &\dots&1&1&0&0\\
+    \(\wedge\)&\dots&1&0&1&0\\\cline{2-6}
+              &\dots&1&1&1&0
+  \end{tabular}
+  \caption{Bitwise Logical Inclusive-OR Operation}
+  \label{fig:or}
+\end{figure}
+
+The C and V flags are never modified by this instruction.
+The N flag is set if the most-significant bit of the result is set,
+and the Z flag is set if no bits are set in the result.
+
+The \texttt{OR} instruction is primarily used to set specific bits
+in a destination;
+to set bits 5 and 12 of register \(\text{R}_0\),
+use ``\texttt{or r0,0x1020}'':
+\begin{center}
+\encoding{0&0&0&1&0&0&0&0&0&0&1&0&0&0&0&0}
+\end{center}
+
+\section{Logical Exclusive-OR}
+The logical exclusive-OR of two given bits \(a\) and \(b\),
+written \(a\oplus b\),
+is set if \(a\) is set, or if \(b\) is set, but not both;
+otherwise it is cleared.
+In other words, the result is set if and only if the inputs differ.
+The \texttt{XOR} instruction,
+``\texttt{xor \textit{destination},\textit{source}}'',
+computes this operation in parallel
+bit-by-bit between its destination and source operands,
+then stores the result back into the destination.
+
+\begin{figure}[ht!]\centering
+  \begin{tabular}{cccccc}
+              &\dots&1&1&0&0\\
+    \(\wedge\)&\dots&1&0&1&0\\\cline{2-6}
+              &\dots&0&1&1&0
+  \end{tabular}
+  \caption{Bitwise Logical Exclusive-OR Operation}
+  \label{fig:xor}
+\end{figure}
+
+The C and V flags are never modified by this instruction.
+The N flag is set if the most-significant bit of the result is set,
+and the Z flag is set if no bits are set in the result.
+
+When a source bit is cleared,
+the corresponding destination bit is unchanged.
+When a source bit is set,
+the corresponding destination bit is toggled.
+Thus, the \texttt{XOR} instruction is primarily used
+to toggle specific bits in a destination;
+to toggle bits 14 and 15 of register \(\text{R}_0\),
+use ``\texttt{xor r0,0xC000}'':
+\begin{center}
+\encoding{1&1&0&0&0&0&0&0&0&0&0&0&0&0&0&0}
+\end{center}
+
+\section{Logical Complement}
+A bit, \(a\), can be in one of two states.
+Its complement, written \({\sim}a\), is the other state.
+The assembler provides a \texttt{NOT} instruction
+synthesized from exclusive-OR:
+``\texttt{not \textit{destination}}''
+is equivalent to ``\texttt{xor \textit{destination},0xFFFF}''.
+
+\section{Status Register}
+The transfer, logical AND, inclusive-OR, and exclusive-OR operations
+can also be performed between a source and the status register,
+using \texttt{MOVSR}, \texttt{ANDSR}, \texttt{ORSR},
+and \texttt{XORSR}, respectively.
+In system mode, the entire status register is written.
+In program mode, only the condition flags are written.
+In either case, the original content of the status register
+is placed into the destination location.
+
+\section{Shifts \& Rotations}
+Shifting the bits of a number one position to the left,
+placing zeros in the newly unoccupied positions,
+is equivalent to multiplying by two.
+The ``\texttt{asl \textit{destination},\textit{source}}''
+instruction performs this operation
+on the \texttt{\textit{destination}} as many times
+as indicated by the \texttt{\textit{source}} operand,
+setting the carry flag if \emph{any} set bit is shifted out,
+and setting the overflow flag if the sign changes at any point.
+
+\begin{figure}[ht!]\centering
+  \begin{tikzpicture}[x=1.5in]
+    \node[draw] at (0,0) (C) {C};
+    \node[draw,text width=2in,align=center] at (1,0) (S) {Source};
+    \node[draw] at (2,0) (Z) {0};
+    \path[->,thick] (Z) edge (S) (S) edge (C);
+  \end{tikzpicture}
+  \caption{Left Shift Operation}
+  \label{fig:early-asl}
+\end{figure}
+
+Shifting the bits one position to the right divides by two,
+rounding down.
+This operation differs depending on whether the input
+is signed or unsigned.
+The \texttt{ASR} instruction computes the signed interpretation,
+while the \texttt{LSR} instruction computes the unsigned interpretation.
+The difference lies in whether the newly opened bits
+are filled with copies of the sign bit (\texttt{ASR})
+or with zero (\texttt{LSR}).
+In either case,
+the instruction performs this operation
+on the \texttt{\textit{destination}} as many times
+as indicated by the \texttt{\textit{source}} operand,
+setting the carry flag if \emph{any} set bit is shifted out,
+and clearing the overflow flag.
+
+\begin{figure}[htb]\centering
+  \begin{tikzpicture}[x=1.5in]
+    \node at (0,0) (Z) {\phantom{0}};
+    \node[draw,text width=2in,align=center] at (1,0) (S) {Source};
+    \node[draw] at (2,0) (C) {C};
+    \node[anchor=south] at (S.north) {Arithmetic Shift Right};
+    \clip ([xshift=-3mm]S.north west)
+        rectangle ([xshift=1mm,yshift=-3mm]C.south east);
+    \path[->,thick]
+      ([xshift=2mm]S.south west) edge[out=270,in=180,looseness=5] (S.west)
+      (S) edge (C);
+  \end{tikzpicture}
+
+  \vspace{\baselineskip}%
+  \begin{tikzpicture}[x=1.5in]
+    \node[draw] at (0,0) (Z) {0};
+    \node[draw,text width=2in,align=center] at (1,0) (S) {Source};
+    \node[draw] at (2,0) (C) {C};
+    \node[anchor=south] at (S.north) {Logical Shift Right};
+    \path[->,thick] (Z) edge (S) (S) edge (C);
+  \end{tikzpicture}
+  \caption{Right Shift Operations}
+  \label{fig:asr-lsr}
+\end{figure}
+
+For rotations, the newly opened positions are filled
+not by fixed values
+but by the bits shifted out, in order.
+The \textsc{stol} architecture
+provides leftward and rightward rotations
+within the \texttt{\textit{destination}} operand
+(\texttt{ROL} and \texttt{ROR})
+or through the carry flag
+(\texttt{RLC} and \texttt{RRC}).
+
+\begin{figure}[ht!]\centering
+  \begin{tikzpicture}[x=1.25in]
+    \node[draw,text width=1.5in,align=center] at (0,0) (S) {Source};
+    \node[anchor=south] at (S.north) {Rotate Left};
+    \path[->,thick]
+    (S.west) edge[out=210,in=-30] (S.east);
+  \end{tikzpicture}
+  \begin{tikzpicture}[x=1.25in]
+    \node[draw] at (0,0) (C) {C};
+    \node[draw,text width=1.5in,align=center] at (1,0) (S) {Source};
+    \node[anchor=south] at (S.north) (x) {Rotate Left Through Carry};
+    \path (C.west) |- coordinate (c) (x.north);
+    \clip ([xshift=-3mm]c)
+    rectangle ([xshift=3mm,yshift=-7mm]S.south east);
+    \path[->,thick]
+    (S) edge (C)
+    (C.west) edge[out=210,in=-30] (S.east);
+  \end{tikzpicture}
+
+  \begin{tikzpicture}[x=1.25in]
+    \node[draw,text width=1.5in,align=center] at (0,0) (S) {Source};
+    \node[anchor=south] at (S.north) {Rotate Right};
+    \path[->,thick]
+    (S.east) edge[out=-30,in=210] (S.west);
+  \end{tikzpicture}
+  \begin{tikzpicture}[x=1.25in]
+    \node[draw] at (0,0) (C) {C};
+    \node[draw,text width=1.5in,align=center] at (1,0) (S) {Source};
+    \node[anchor=south] at (S.north) {Rotate Right Through Carry};
+    \path (C.west) |- coordinate (c) (x.north);
+    \clip ([xshift=-3mm]c)
+    rectangle ([xshift=3mm,yshift=-7mm]S.south east);
+    \path[->,thick]
+    (C) edge (S)
+    (S.east) edge[in=210,out=-30] (C.west);
+  \end{tikzpicture}
+  \caption{Rotation Operations}
+  \label{fig:rotations}
+\end{figure}
+
+For each of these shift and rotation operations,
+the negative flag is set if the most-significant bit is set,
+and the zero flag is set if the result is zero.
+
+Due to how the carry flag is set,
+shifts can be extended to higher precision
+by shifting only one position at a time
+and making use of the appropriate rotate-through-carry instructions.
+For a leftward shift,
+begin at the least-significant position
+and use the \texttt{ASL} instruction,
+then proceed to positions of higher significance
+using \texttt{RLC} to pull in the bit previously shifted out
+and to store the bit shifted out by this operation.
+Repeat until finished.
+For a rightward shift,
+begin at the most-significant position
+and use whichever of \texttt{ASR} or \texttt{LSR} is appropriate,
+then descend through positions of lesser significance
+using \texttt{RRC} until finished.
+
+\sbox\blob{\hbox{\texttt{ABCD}}}%
+\begin{table}[ht!]\centering
+  \caption{Instructions for Boolean Logic and Bit Manipulation}
+  \label{tbl:bitmanip}
+  \begin{tabular}{lcl}
+    \toprule
+    \rlap{Encoding}&&Instruction\\\midrule
+    \texttt{C\textit{m}\textit{d}\textit{s}}&\texttt{MOV}
+    &Move\\
+    \texttt{A\textit{m}\textit{d}\textit{s}}&\texttt{AND}
+    &Bitwise Logical AND\\
+    \texttt{9\textit{m}\textit{d}\textit{s}}&\texttt{OR}
+    &Bitwise Logical Inclusive-OR\\
+    \texttt{B\textit{m}\textit{d}\textit{s}}&\texttt{XOR}
+    &Bitwise Logical Exclusive-OR\\
+    \hbox to \wd\blob{\hss\(\dagger\)\hss}&\texttt{NOT}
+    &Bitwise Logical NOT\\
+    \texttt{2\textit{m}\textit{d}\textit{s}},
+    \(\text{0}\leq\text{\texttt{\textit{m}}}\leq \text{3}\)
+    &\texttt{MOVSR}&Logical Exclusive-OR into Status\\
+    \texttt{2\textit{m}\textit{d}\textit{s}},
+    \(\text{8}\leq\text{\texttt{\textit{m}}}\leq \text{B}\)
+    &\texttt{ANDSR}&Logical AND into Status\\
+    \texttt{2\textit{m}\textit{d}\textit{s}},
+    \(\text{4}\leq\text{\texttt{\textit{m}}}\leq \text{7}\)
+    &\texttt{ORSR}&Logical Inclusive-OR into Status\\
+    \texttt{2\textit{m}\textit{d}\textit{s}},
+    \(\text{C}\leq\text{\texttt{\textit{m}}}\leq \text{F}\)
+    &\texttt{XORSR}&Logical Exclusive-OR into Status\\
+    \texttt{3\textit{m}\textit{d}\textit{s}},
+    \(4\leq\text{\texttt{\textit{m}}}\leq 5\)
+    &\texttt{ASL}&Arithmetic Shift Left\\
+    \texttt{3\textit{m}\textit{d}\textit{s}},
+    \(6\leq\text{\texttt{\textit{m}}}\leq 7\)
+    &\texttt{ASR}&Arithmetic Shift Right\\
+    \texttt{3\textit{m}\textit{d}\textit{s}},
+    \(2\leq\text{\texttt{\textit{m}}}\leq 3\)
+    &\texttt{LSR}&Logical Shift Right\\
+    \texttt{3\textit{m}\textit{d}\textit{s}},
+    \(8\leq\text{\texttt{\textit{m}}}\leq 9\)
+    &\texttt{ROL}&Rotate Left\\
+    \texttt{3\textit{m}\textit{d}\textit{s}},
+    \(\text{A}\leq\text{\texttt{\textit{m}}}\leq \text{B}\)
+    &\texttt{ROR}&Rotate Right\\
+    \texttt{3\textit{m}\textit{d}\textit{s}},
+    \(\text{C}\leq\text{\texttt{\textit{m}}}\leq \text{D}\)
+    &\texttt{RLC}&Rotate Left Through Carry\\
+    \texttt{3\textit{m}\textit{d}\textit{s}},
+    \(\text{E}\leq\text{\texttt{\textit{m}}}\leq \text{F}\)
+    &\texttt{RRC}&Rotate Right Through Carry\\
+    \bottomrule
+  \end{tabular}\\
+  \(\dagger\) \texttt{NOT} is a synthetic instruction
+  implemented as \texttt{XOR} with a source of 0xFFFF
+\end{table}
+
+
+\chapter{Stacks \& Linear Data}\label{ch:data}
+A stack is a data structure
+into which data can be \concept[push]{pushed}
+and from which data can be \concept[pop]{popped},
+where the \emph{last} item to be pushed
+is the \emph{first} to be popped.
+A stack can be implemented in software by storing a pointer,
+moving it in one direction to push data,
+and moving it in the other direction upon reading data.
+In one case, the operation should occur before the movement,
+and in the other, it should occur after the movement.
+It does not matter which of the four possible configurations is used.
+
+Because a stack data structure is used to maintain state
+across subroutine calls and returns (see \S\ref{sec:calling}),
+the \textsc{stol} architecture provides hardware
+that efficiently implements such a structure.
+There are two stack pointers,
+of which only one is usable in this capacity at a time:
+the program stack pointer (\texttt{PSP})
+and the system stack pointer (\texttt{SSP}).
+The active stack pointer is known as \texttt{SP}.
+The \texttt{PSPR}, \texttt{PSPRW}, and \texttt{PSPW} instructions
+exist to manipulate the program stack pointer
+in system mode.
+
+The \texttt{PUSH} instruction
+first decrements the active stack pointer
+and then writes the given data.
+The \texttt{POP} instruction
+reads data and then increments the active stack pointer.
+With this configuration, the stack grows downward,
+from higher addresses toward lower addresses.
+The stack pointer points to the \emph{top} of the stack,
+the lowest address that it currently occupies.
+
+To read the top element without popping it,
+the register-indirect addressing mode can be used:
+``\texttt{mov r0,(sp)}''
+reads the top item into register \(\text{R}_0\).
+Register-indirect addressing with offset
+allows for reading prior elements
+without popping:
+``\texttt{mov r0,(sp+3)}''
+reads the element that would become the top
+after three pops.
+
+\section{Arrays \& Structured Data}
+Accessing the stack elements without popping them
+is akin to accessing the stack as an \emph{array}.
+An array is a linear sequence of data,
+represented by its starting address.
+If the starting address of an array of 16-bit words
+is in register \(\text{R}_0\),
+then the first item is accessed via \texttt{(\(\text{r0}+\text{0}\))},
+the second by \texttt{(\(\text{r0}+\text{1}\))}, and so on.
+If the elements in the array are compound objects,
+the indices must be multiplied by the size of the objects;
+for instance, if the array contained 64-bit integers represented
+by four 16-bit words each,
+the fifth element is not at \texttt{(\(\text{r0}+\text{4}\))}
+but at \texttt{(\(\text{r0}+\text{16}\))},
+extending through \texttt{(\(\text{r0}+\text{19}\))}.
+If the array's base address is \texttt{\textit{addr}}
+and the index is stored in register \(\text{R}_1\),
+the element can also be obtained via
+\texttt{(\(\text{r1}+\textit{addr}\))}.
+
+An array holds a sequence of data of the same type
+(and thus the same size).
+One can also bundle distinct types of data,
+with potentially different sizes,
+in a \concept{record structure},
+which higher-level languages might call
+a \emph{tuple}, a \emph{struct} or a \emph{class}.
+The only requirement is that the relevant offsets
+from the structure's base address
+are known.
+For instance, a program might represent a circle
+as a single-precision radius
+alongside double-precision \(x\)- and \(y\)-coordinates.
+If they are stored in this order,
+the radius is at offset zero from the base address,
+the \(x\)-coordinate at offset one (extending to two),
+and the \(y\)-coordinate at offset three (extending to four).
+
+When a sequence of structured objects is to be stored in an array,
+one has two options.
+One can make a single array containing each of the structures,
+or one can make a structure of many arrays, one per component.
+One is encouraged to consider and compare the access patterns involved
+in each of these two layouts
+when reading or writing a particular field of the object
+at a particular index.
+
+\section{Strings}
+A string like \texttt{\textquotedbl hello\textquotedbl}
+is a sequence of character values;
+in \textsc{ascii} this string is the sequence
+104, 101, 108, 108, 111.
+However, this sequence is usually not stored in isolation.
+When laid out in the same linear stream
+as instructions and other data,
+this string on its own has no indication of its size.
+
+The C programming language uses the convention
+that strings are terminated with a \emph{sentinel} value,
+specifically the value 0.
+To encode this string as a C string, one can use:
+\begin{quote}\asmstyle
+\asmline{dw}{\textquotedbl hello\textquotedbl,0}
+\end{quote}
+This representation has been a lasting source of bugs
+across many programs.
+In contrast, Pascal uses the convention
+that strings begin with an indication of their length.
+To encode as a Pascal string, one can use:
+\begin{quote}\asmstyle
+\asmline{dw}{5,\textquotedbl hello\textquotedbl}
+\end{quote}
+The assembler is not opinionated on this matter;
+no shortcuts are provided to facilitate
+the use of either representation.
+
+\begin{table}[ht!]\centering
+  \caption{Instructions for Stack Manipulation}
+  \label{tbl:stack}
+  \begin{tabular}{lcl}
+    \toprule
+    \rlap{Encoding}&&Instruction\\\midrule
+    \texttt{110\textit{s}}&\texttt{PUSH}&Push to Stack\\
+    \texttt{15\textit{d}0}&\texttt{POP}&Pop from Stack\\
+    \texttt{1A\textit{d}0}&\texttt{PSPR}&Read Program Stack Pointer\\
+    \texttt{1B\textit{d}\textit{s}}&\texttt{PSPRW}
+    &Read and Set Program Stack Pointer\\
+    \texttt{190\textit{s}}&\texttt{PSPW}&Set Program Stack Pointer\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+
+\chapter{Control Flow \& Structured Programming}\label{ch:prog}
+In assembly language, all deviations from linear control flow
+are of the form ``if this condition holds, go to this instruction''.
+When abused, this results in a structureless meandering
+through program memory often called \emph{spaghetti code}.
+This chapter describes tips and techniques
+for avoiding the spaghetti
+by mapping some concepts from higher-level programming languages
+into assembly language.
+
+Higher-level languages generally use structured programming concepts,
+including if--then--else blocks, while-loops, for-loops,
+and function calls to simplify program analysis.
+Throughout this chapter,
+the relevant structure will be indicated as comments
+beside the equivalent assembly code.
+This can be a helpful exercise when structuring a program.
+
+The section on subroutine calls describes a variety of methods
+for passing parameters and returning values.
+Higher-level languages may refer to these as \emph{functions}
+or \emph{procedures}.
+More complex transfers of control,
+such as for generators or other \emph{coroutines},
+are beyond the scope of this manual.
+
+\section{Conditional Execution}
+In a higher-level language, conditional execution
+might by represented by an if--then--else block
+structured like the following:
+
+\begin{quote}\asmstyle
+\null\textbf{If} \textit{condition} \textbf{Then}\\
+\null\qquad \dots\textit{true case}\dots\\
+\null\textbf{Else}\\
+\null\qquad \dots\textit{false case}\dots\\
+\null\textbf{EndIf}
+\end{quote}
+
+A conditional branch to a future label
+skips the code between that branch and that label
+if the condition is satisfied.
+So an assembly-language programmer has two choices:
+place the \textit{false case} first and use the given condition,
+or place the \textit{true case} first and invert the condition.
+In either case, whichever case comes first
+should end with a branch instruction skipping over the other case.
+Concretely, consider the following high-level structure,
+also depicted as a flowchart in Figure~\ref{fig:if-fc},
+that retrieves an element from an \texttt{array}
+if the index (\(\text{\texttt{R}}_1\))
+is within the bounds (\(\text{\texttt{R}}_2\)),
+or yields \(-1\) otherwise.
+
+\begin{figure}[ht!]\centering
+  \begin{tikzpicture}[x=2cm]
+    \begin{scope}[nodes=draw]
+      \node[rounded corners=6.5pt]
+            at ( 0, 0.5) (st) {start};
+      \node[diamond,aspect=2]
+            at ( 0,-1) (if) {\(\text{R}_1 < \text{R}_2\)};
+      \node at (-1,-2) (tr)
+            {\(\text{array}[\text{R}_1]\rightarrow\text{R}_0\)};
+      \node at ( 1,-2) (fa) {\(-1\rightarrow\text{R}_0\)};
+      \node[circle]
+            at ( 0,-3) (cx) {};
+      \node[rounded corners=6.5pt]
+            at ( 0,-4) (en) {end};
+    \end{scope}
+    \begin{scope}[->,thick]
+      \draw (st) -- (if);
+      \draw (if.west) -| node[above,pos=0,anchor=south east] {true} (tr);
+      \draw (if.east) -| node[above,pos=0,anchor=south west] {false} (fa);
+      \draw (tr.south) |- (cx);
+      \draw (fa.south) |- (cx);
+      \draw (cx) -- (en);
+    \end{scope}
+  \end{tikzpicture}
+  \caption{Array Bounds Checking}
+  \label{fig:if-fc}
+\end{figure}
+
+\begin{quote}\asmstyle
+\null\textbf{If} \(\text{R}_1\) < \(\text{R}_2\) \textbf{Then}\\
+\null\qquad \(\text{array}[\text{R}_1]\rightarrow\text{R}_0\)\\
+\null\textbf{Else}\\
+\null\qquad \(-1\rightarrow \text{R}_0\)\\
+\null\textbf{EndIf}
+\end{quote}
+A direct conversion to assembly code is as follows:
+\begin{quote}\asmstyle
+  \asmline{cmp}{r1,r2};
+  \textbf{If} \(\text{R}_1 < \text{R}_2\) \textbf{Then}\\
+  \asmline{br.u>=}{false};\qquad
+  // inverted condition keeps true first\\
+  \asmline[true]{mov}{r0,\textit{array}};\qquad
+  \(\text{array}[\text{R}_1]\rightarrow\text{R}_0\)\\
+  \asmline{add}{r0,r1}\\
+  \asmline{mov}{r0,(r0)}\\
+  \asmline{br}{endif}; \textbf{Else}\\
+  \asmline[false]{mov}{r0,-1};\qquad\(-1\rightarrow\text{R}_0\)\\
+  \asmline[endif]{}{}; \textbf{EndIf}
+\end{quote}
+
+If there is no \texttt{Else} and thus no \textit{false case},
+the branch at the end of the \textit{true case} can be omitted
+for shorter, faster code.
+For instance, the following code computes the unsigned absolute value
+of a signed integer in register \(\text{R}_0\).
+
+\begin{figure}[ht!]\centering
+  \begin{tikzpicture}[x=2cm]
+    \begin{scope}[nodes=draw]
+      \node[rounded corners=6.5pt]
+            at ( 0, 0.5) (st) {start};
+      \node[diamond,aspect=2]
+            at ( 0,-1) (if) {\(\text{R}_0 < 0\)};
+      \node at (-1,-2) (tr)
+            {\(-\text{R}_0\rightarrow\text{R}_0\)};
+      \coordinate (fa) at ( 1,-2);
+      \node[circle] at ( 0,-3) (cx) {};
+      \node[rounded corners=6.5pt]
+            at ( 0,-4) (en) {end};
+    \end{scope}
+    \begin{scope}[->,thick]
+      \draw (st) -- (if);
+      \draw (if.west) -| node[above,pos=0,anchor=south east]
+            {true} (tr);
+      \draw (if.east) -| node[above,pos=0,anchor=south west]
+            {false} (fa) |- (cx);
+      \draw (tr.south) |- (cx);
+      \draw (cx) -- (en);
+    \end{scope}
+  \end{tikzpicture}
+  \caption{Absolute Value}
+  \label{fig:if-no-else}
+\end{figure}
+
+\begin{quote}\asmstyle
+  \asmline{or}{r0,r0}; \textbf{If} \(\text{R}_0 < 0\) \textbf{Then}\\
+  \asmline{br.p}{end};\qquad // inverted condition\\
+  \asmline{neg}{r0};\qquad \(-\text{R}_0\rightarrow\text{R}_0\)\\
+  \asmline[end]{}{}; \textbf{EndIf}
+\end{quote}
+
+\section{Looping Control Flow}
+A while-loop is a lot like an if--then--else block,
+except that the end of the \textit{true case} jumps
+not ahead of the \textit{false case},
+but instead back up to the conditional test.
+Consider the problem of finding the sum of an array stored in memory,
+depicted in Figure~\ref{fig:array-sum},
+written as follows.
+
+\begin{figure}[ht!]\centering
+  \begin{tikzpicture}[x=24mm]
+    \begin{scope}[nodes=draw]
+      \node[rounded corners=6.5pt]
+            at ( 0, 0) (st) {start};
+      \node at ( 0,-1) (ini0) {\(0\rightarrow\text{R}_0\)};
+      \node at ( 0,-2) (ini1) {\(0\rightarrow\text{R}_1\)};
+      \node[circle] at ( 0,-2.8) (c) {};
+      \node[diamond,aspect=2]
+            at ( 0,-4) (if) {\(\text{R}_1 < \text{R}_2\)};
+      \node at (-1,-5) (tr1)
+            {\(\text{R}_0 + \text{array}[\text{R}_1]\rightarrow\text{R}_0\)};
+      \node at (-1,-6) (tr2)
+            {\(\text{R}_1 + 1\rightarrow\text{R}_1\)};
+      \node[rounded corners=6.5pt]
+            at ( 1,-7) (en) {end};
+    \end{scope}
+    \begin{scope}[->,thick]
+      \draw (st) -- (ini0);
+      \draw (ini0) -- (ini1);
+      \draw (ini1) -- (c);
+      \draw (c) -- (if);
+      \draw (if.west) -| node[above,pos=0,anchor=south east] {true} (tr1);
+      \draw (if.east) -| node[above,pos=0,anchor=south west] {false} (en);
+      \draw (tr1) -- (tr2);
+      \draw (tr2.south) |- (-2,-6.75) |- (c.west);
+    \end{scope}
+  \end{tikzpicture}
+  \caption{Array Sum}
+  \label{fig:array-sum}
+\end{figure}
+
+\begin{quote}\asmstyle
+  \asmline{mov}{r0,0}; \(0\rightarrow\text{R}_0\)\\
+  \asmline{mov}{r1,0}; \(0\rightarrow\text{R}_1\)\\
+  \asmline[loop]{cmp}{r1,r2};
+  \textbf{While} \(\text{R}_1 < \text{R}_2\)\\
+  \asmline{br.u>=}{end}\\
+  \asmline{mov}{r3,\textit{array}};\qquad%
+  \(\text{R}_0 + \text{array}[\text{R}_0]\rightarrow\text{R}_0\)\\
+  \asmline{add}{r3,r1}\\
+  \asmline{add}{r0,(r3)}\\
+  \asmline{add}{r1,1};\qquad\(\text{R}_1+1\rightarrow\text{R}_1\)\\
+  \asmline{br}{loop}; \textbf{EndWhile}\\
+  \asmline[end]{}{}
+\end{quote}
+
+The preceding examples used the \texttt{BR} instruction,
+for \emph{relative} branches.
+In this case, the program code contains not the actual target address,
+but its offset from the current location.
+Using \texttt{BA}, for \emph{absolute} branches,
+would store the actual target address directly.
+On some systems, relative branches are smaller and faster,
+but compromise in only being able to store relatively short offsets.
+On the \textsc{stol} system, this is not the case:
+absolute and relative targets
+generally require the same amount of time,
+and either can cover the entire address space.
+However, one reason to prefer relative branches
+is that the resulting machine code executes identically
+regardless of where it is loaded in memory;
+this simplifies building programs from composable parts.
+
+\section{Subroutines \& Function Calls}\label{sec:calling}
+A simple procedure that takes no parameters and returns no result,
+such as a procedure that updates some external hardware,
+can be written and used by placing a label at its first instruction
+and a return (\texttt{RET}) as its final instruction,
+then issuing a \texttt{CALL} to that label.
+The \texttt{CALL} instruction pushes
+the location of the next instruction to the stack
+and then transfers control to the given subroutine.
+The \texttt{RET} instruction later pops the location off of the stack
+and restores control back to that point.
+This is depicted in Figure~\ref{fig:crstack}.
+
+\begin{figure}[ht!]\centering
+  \begin{tblr}{colspec={|c|>{\hspace*{-3mm}}l}}
+    \textit{higher addresses}\\\\\cline{1}
+    \SetCell{bg=.!18}{prior frame}&\({}\leftarrow\text{SP}\)\\\cline{1}
+    ????\\\cline{1}\\
+    \textit{lower addresses}\\
+  \end{tblr}
+  \({}\stackrel{\text{\texttt{CALL}}}{\longrightarrow}{}\)
+  \begin{tblr}{colspec={|c|>{\hspace*{-3mm}}l}}
+    \textit{higher addresses}\\\\\cline{1}
+    \SetCell{bg=.!18}{prior frame}\\\cline{1}
+    return address&\({}\leftarrow\text{SP}\)\\\cline{1}\\
+    \textit{lower addresses}
+  \end{tblr}
+  \({}\stackrel{\text{\texttt{RET}}}{\longrightarrow}{}\)
+  \begin{tblr}{colspec={|c|>{\hspace*{-3mm}}l}}
+    \textit{higher addresses}\\\\\cline{1}
+    \SetCell{bg=.!18}{prior frame}&\({}\leftarrow\text{SP}\)\\\cline{1}
+    return address\\\cline{1}\\
+    \textit{lower addresses}
+  \end{tblr}\\
+  \texttt{CALL} pushes location of next instruction as
+  ``return address'',\\
+  \texttt{RET} retrieves location and resumes there
+  \caption{Stack Operations for Call \& Return}
+  \label{fig:crstack}
+\end{figure}
+
+For more complex functions,
+a system must define an \concept{application binary interface}
+(\textsc{abi})
+that describes how parameters and return values are exchanged.
+This section describes a few potential solutions,
+including the use of registers or the stack to exchange information.
+
+Care must be taken to ensure that the return address
+is not overwritten
+and that the stack pointer is in the right place
+when the \texttt{RET} instruction is reached.
+Failing to do so can cause unpredictable results,
+as program execution will resume
+not from the instruction following the \texttt{CALL},
+but from whatever address finds itself at the top of the stack
+upon return.
+The stack pointer is a general-purpose register,
+and it can be manipulated freely
+just like any of the others.
+And the \texttt{PUSH} and \texttt{POP}
+instructions allow the stack pointer
+to be used to efficiently traverse linear structures.
+But if this is done,
+it must be returned to the correct state later.
+
+As an example of a simple procedure,
+suppose that a system is configured
+with a terminal output device mapped into memory
+at address 0x100.
+The terminal will display any value written to this address,
+interpreting its seven least-significant bits
+as an \textsc{ascii} character.
+The display is cleared by sending a form feed character
+(\textsc{ascii} 0xC).
+The following program calls a procedure
+that prints the word ``hello'' to the terminal output.
+This program also demonstrates using the stack pointer
+to iterate through an array.
+This makes use of the fact that the stack grows downward;
+to push is to decrease the pointer and then write data,
+and to pop is to read data and then increase the pointer.
+
+\begin{quote}\asmstyle
+  \asmline{call}{\textunderscore greet}%
+  ; greet()\\
+  \asmline{halt}{}\\
+  \asmline[\textunderscore greet]{}{}%
+  ; \textbf{Procedure} greet()\\
+  \asmline{mov}{r0,0x100}\\
+  \asmline{mov}{r3,sp};\qquad \(\text{SP}\rightarrow\text{R}_3\)
+  // backup\\
+  \asmline{mov}{sp,str};\qquad
+  \(\text{``hello''}\rightarrow\text{SP}\)\\
+  \asmline{pop}{r1};\qquad\((\text{SP}+)\rightarrow\text{R}_1\)
+  // length\\
+  \asmline[loop]{or}{r1,r1};\qquad
+  \textbf{While} \(\text{R}_1 \neq 0\)\\
+  \asmline{br.z}{end}\\
+  \asmline{pop}{r2};\qquad\qquad
+  \((\text{SP}+)\rightarrow(\text{Terminal})\)\\
+  \asmline{mov}{(r0),r2}\\
+  \asmline{sub}{r1,r1};\qquad\qquad
+  \(\text{R}_1-1\rightarrow\text{R}_1\)\\
+  \asmline{br}{loop};\qquad \textbf{EndWhile}\\
+  \asmline[end]{mov}{sp,r3};\qquad \(\text{R}_3\rightarrow\text{SP}\)
+  // restore\\
+  \asmline{ret}{}; \textbf{EndProcedure}\\
+  \asmline[str]{dw}{5,\textquotedbl hello\textquotedbl}%
+  ; // length-prefixed string
+\end{quote}
+
+\subsection{Passing Information via Registers}
+One way to exchange information between a calling routine
+(the ``caller'') and the subroutine so called (the ``callee'')
+is to place the parameters and the return value into specific registers.
+For instance, parameters could be placed,
+in order, into registers \(\text{R}_0\), \(\text{R}_1\), and so on.
+The return value could be placed into register \(\text{R}_0\).
+Larger values such as higher-precision numbers
+or other structures might span multiple registers.
+
+\begin{quote}\asmstyle
+  \asmline{mov}{r0,5}; mul(5,21)\\
+  \asmline{mov}{r1,21}\\
+  \asmline{call}{\textunderscore mul}\\
+  \asmline{halt}{}\\
+  \asmline[\textunderscore mul]{}{}; \textbf{Function} mul(x,y)\\
+  \asmline{push}{r4}\\
+  \asmline{mov}{r2,1}%
+  ;\qquad\(1\rightarrow\text{mask}\)\\
+  \asmline{xor}{r3,r3}%
+  ;\qquad\(0\rightarrow\text{out}\)\\
+  \asmline[loop]{or}{r1,r1}%
+  ;\qquad\textbf{While} \(\text{y}\neq 0\)\\
+  \asmline{br.z}{end}\\
+  \asmline{mov}{r4,r2}%
+  ;\qquad\qquad\textbf{If} \(\text{y}\wedge\text{mask}\neq 0\) \textbf{Then}\\
+  \asmline{and}{r4,r1}\\
+  \asmline{br.z}{skip}\\
+  \asmline{add}{r3,r0}%
+  ;\qquad\qquad\qquad\(\text{out}+\text{x}\rightarrow\text{out}\)\\
+  \asmline{xor}{r1,r2}%
+  ;\qquad\qquad\qquad\(\text{y}\oplus\text{mask}\rightarrow\text{y}\)\\
+  \asmline[skip]{}{}%
+  ;\qquad\qquad\textbf{EndIf}\\
+  \asmline{asl}{r2,1}%
+  ;\qquad\qquad\(\text{mask}\cdot 2\rightarrow\text{mask}\)\\
+  \asmline{asl}{r0,1}%
+  ;\qquad\qquad\(\text{x}\cdot 2\rightarrow\text{x}\)\\
+  \asmline{br}{loop}%
+  ;\qquad\textbf{EndWhile}\\
+  \asmline[end]{mov}{r0,r3}%
+  ;\qquad\textbf{Return} out\\
+  \asmline{pop}{r4}\\
+  \asmline{ret}{};
+  \textbf{EndFunction}
+\end{quote}
+
+During subroutine execution, it is almost certainly the case
+that some registers will be modified.
+Part of the \textsc{abi} is to specify
+which routine is responsible for preserving the values
+in which registers.
+
+\subsubsection{Callee-Saved Registers}
+A \concept{callee-saved} register is one
+that is not allowed to appear as if it has changed
+between entering and exiting the subroutine.
+If such a register is used, its value must be stored and restored.
+The previous two examples were written
+under the convention that register \(\text{R}_4\) is callee-saved,
+so the multiplication function needed to \texttt{PUSH} it before use
+and \texttt{POP} it before returning.
+Notice that this changes where the stack pointer is;
+forgetting to \texttt{POP} the value
+would not only violate the convention
+but also case the subsequent \texttt{RET}
+to transfer control to an unknown location.
+
+\subsubsection{Caller-Saved Registers}
+A \concept{caller-saved} register is exactly the opposite
+of a callee-saved register.
+Its value can be freely changed by the called subroutine.
+So if the caller wishes to preserve the value,
+then it must store it somewhere before the \texttt{CALL}
+and restore it afterward.
+The preceding examples were written under the convention
+that registers \(\text{R}_0\)--\(\text{R}_3\) are caller-saved.
+
+If all temporary storage is via the stack,
+then caller-saved registers will be at higher memory locations
+than the return address of the callee,
+and callee-saved registers will be below.
+This situation is depicted in Figure~\ref{fig:who-saves}.
+
+\begin{figure}[ht!]\centering
+  \begin{tblr}{colspec={|c|>{\hspace*{-3mm}}l}}
+    \textit{higher addresses}\\\\\cline{1}
+    \SetCell{bg=.!18}additional\\
+    \SetCell{bg=.!18}caller frame\\\cline{1}
+    \SetCell{bg=.!18}caller-saved\\
+    \SetCell{bg=.!18}registers\\\cline{1}
+    return address\\\cline{1}
+    callee-saved\\
+    registers&\({}\leftarrow\text{SP}\)\\\cline{1}\\
+    \textit{lower addresses}\\
+  \end{tblr}
+  \caption{Caller- and Callee-Saved Registers}
+  \label{fig:who-saves}
+\end{figure}
+
+\subsection{Passing Information via the Stack}
+Another option is to pass parameters and return values
+by placing them into the stack.
+This allows for passing more, larger values
+than can fit in the available registers.
+There is some freedom with respect to the stack layout,
+but the most important choice
+is whether the return address precedes
+or follows the parameters and return value.
+One approach is to push the parameters in reverse order,
+then \texttt{CALL} the subroutine,
+and use one of the parameter slots to store
+the return value.
+The caller must push the values onto the stack
+\emph{and} restore the stack upon return.
+The multiplication function can be rewritten in this form
+as follows.
+Inside the \texttt{\textunderscore mul} function,
+the stack will resemble Figure~\ref{fig:mul-stack}.
+
+\begin{quote}\asmstyle
+  \asmline{mov}{r0,21}; mul(5,21)\\
+  \asmline{push}{r0}\\
+  \asmline{mov}{r0,5}\\
+  \asmline{push}{r0}\\
+  \asmline{call}{\textunderscore mul}\\
+  \asmline{add}{sp,1}\\
+  \asmline{pop}{r0}\\
+  \asmline{halt}{}\\
+  \asmline[\textunderscore mul]{}{}; \textbf{Function} mul(x,y)\\
+  \asmline{mov}{r0,1};\qquad \(1\rightarrow\text{mask}\)\\
+  \asmline{xor}{r1,r1};\qquad\(0\rightarrow\text{out}\)\\
+  \asmline[loop]{or}{(sp+2),(sp+2)};\qquad\textbf{While} \(\text{y}\neq 0\)\\
+  \asmline{br.z}{end}\\
+  \asmline{mov}{r2,r0};\qquad\qquad\textbf{If} \(\text{y}\wedge\text{mask}\neq 0\) \textbf{Then}\\
+  \asmline{and}{r2,(sp+2)}\\
+  \asmline{br.z}{skip}\\
+  \asmline{add}{r1,(sp+1)};\qquad\qquad\qquad\(\text{out}+\text{x}\rightarrow\text{out}\)\\
+  \asmline{xor}{(sp+2),r0};\qquad\qquad\qquad\(\text{y}\oplus\text{mask}\rightarrow\text{y}\)\\
+  \asmline[skip]{}{};\qquad\qquad\textbf{EndIf}\\
+  \asmline{asl}{r0,1};\qquad\qquad\(\text{mask}\cdot 2\rightarrow\text{mask}\)\\
+  \asmline{add}{(sp+1),(sp+1)};\qquad\qquad\(\text{x}\cdot 2\rightarrow\text{x}\)\\
+  \asmline{br}{loop};\qquad\textbf{EndWhile}\\
+  \asmline[end]{mov}{(sp+2),r1};\qquad\textbf{Return} out\\
+  \asmline{ret}{}; \textbf{EndFunction}
+\end{quote}
+
+\begin{figure}[ht!]\centering
+  \begin{tblr}{colspec={|c|l}}
+    \textit{higher addresses}\\\\\cline{1}
+    \SetCell{bg=.!18}caller frame\\\cline{1}
+    \texttt{y}&\rlap{will eventually hold return value}\\\cline{1}
+    \texttt{x}\\\cline{1}
+    return address&\hspace*{-3mm}\({}\leftarrow\text{SP}\)\\\cline{1}\\
+    \textit{lower addresses}\\
+  \end{tblr}
+  \caption{Stack-Based Parameter Passing}
+  \label{fig:mul-stack}
+\end{figure}
+
+\subsection{Nested Subroutines with Lexical Scope}
+Some additional information is needed
+for nested functions and procedures to be able to refer
+to variables in their containing scope.
+In order to facilitate this,
+a subroutine maintains a \concept{static link}
+referring to the stack frame of its containing scope.
+Additionally, for convenience,
+a subroutine may have a \concept{frame pointer}
+which points to the base of the stack
+where local variables and parameters are stored.
+The assembler recognizes \texttt{FP} as an alias
+for register \(\text{\texttt{R}}_{14}\),
+the suggested register for this use.
+Then each subroutine should maintain a \concept{dynamic link},
+referring to the stack frame of the calling routine,
+to be restored upon exit.
+Consider the following complicated set of nested procedures.
+
+\begin{quote}\asmstyle
+\null\textbf{Procedure} a(n)\\
+\null\qquad\textbf{Procedure} b(m)\\
+\null\qquad\qquad \textbf{Local} i\\
+\null\qquad\qquad \(0\rightarrow \text{i}\)\\
+\null\qquad\qquad \textbf{While} \(\text{i} < \text{n} - \text{m}\)\\
+\null\qquad\qquad\qquad \(\text{``\textvisiblespace\textvisiblespace''} \rightarrow (\text{Terminal})\)\\
+\null\qquad\qquad\qquad \(\text{i}+1\rightarrow\text{i}\)\\
+\null\qquad\qquad \textbf{EndWhile}\\
+\null\qquad\qquad \(0\rightarrow \text{i}\)\\
+\null\qquad\qquad \textbf{While} \(\text{i} < \text{m}\)\\
+\null\qquad\qquad\qquad \(\text{``[]''} \rightarrow(\text{Terminal})\)\\
+\null\qquad\qquad\qquad \(\text{i}+1\rightarrow\text{i}\)\\
+\null\qquad\qquad \textbf{EndWhile}\\
+\null\qquad\qquad \(\text{``\textbackslash n''} \rightarrow(\text{Terminal})\)\\
+\null\qquad\qquad \textbf{Return} m\\
+\null\qquad\textbf{EndProcedure}\\
+\null\qquad\textbf{Procedure} c(n)\\
+\null\qquad\qquad\textbf{Local} s\\
+\null\qquad\qquad\(0\rightarrow\text{s}\)\\
+\null\qquad\qquad\textbf{If} \(\text{n}>0\) \textbf{Then}\\
+\null\qquad\qquad\qquad \(\text{s}+\text{b(n)}\rightarrow\text{s}\)\\
+\null\qquad\qquad\qquad \(\text{s}+\text{c(\(\text{n}-2\))}\rightarrow\text{s}\)\\
+\null\qquad\qquad\qquad \(\text{s}+\text{b(n)}\rightarrow\text{s}\)\\
+\null\qquad\qquad\textbf{EndIf}\\
+\null\qquad\qquad\textbf{Return} s\\
+\null\qquad\textbf{EndProcedure}\\
+\null\qquad \textbf{Return} c(n)\\
+\null\textbf{EndProcedure}\\
+\null a(7)
+\end{quote}
+
+Assuming lexical scope,
+the \texttt{\textit{n}} referenced by procedure \texttt{\textit{b}}
+is not the \texttt{\textit{n}} of procedure \texttt{\textit{c}}
+but that of \texttt{\textit{a}}.
+This means that \texttt{\textit{b}} needs to know
+where the variables that belong to \texttt{\textit{a}} are.
+To call a subroutine with a convention that
+links and parameters are accessed with positive offsets
+from the frame pointer
+and local variables with negative offsets:
+\begin{itemize}
+\item Push the parameters in reverse order,
+\item Decrement the stack pointer by two to make room
+  for the static and dynamic links,
+\item Set up the static link if necessary,
+\item \texttt{CALL} to push the return address
+  and execute the subroutine, and
+\item Adjust the stack and pull out the return value, if any.
+\end{itemize}
+The called subroutine itself should do the following.
+\begin{itemize}
+\item Store the incoming dynamic link,
+\item Point the frame pointer at the top of the stack,
+\item Decrement the stack pointer to make room for local variables,
+\item Save any callee-save registers in use,
+\item Execute its operation,
+\item Fill its return value slot,
+\item Restore any callee-save registers in use,
+\item Restore the stack pointer,
+\item Restore the incoming dynamic link, and
+\item \texttt{RET} to pop the return address and proceed.
+\end{itemize}
+
+A direct assembly-language translation of the high-level source
+is provided below.
+Size and speed are both sacrificed for readability.
+After successful execution,
+the program should leave \(32=\text{0x20}\) in register \(\text{R}_0\)
+and print the text shown in Figure~\ref{fig:nest-output}
+to the screen.
+
+\begin{figure}\centering
+  \fbox{\asmstyle\begin{tabular}{c@{}c@{}c@{}c@{}c@{}c@{}c}%
+    []&[]&[]&[]&[]&[]&[]\\\empty
+      &  &[]&[]&[]&[]&[]\\\empty
+      &  &  &  &[]&[]&[]\\\empty
+      &  &  &  &  &  &[]\\\empty
+      &  &  &  &  &  &[]\\\empty
+      &  &  &  &[]&[]&[]\\\empty
+      &  &[]&[]&[]&[]&[]\\\empty
+    []&[]&[]&[]&[]&[]&[]%
+  \end{tabular}}
+  \caption{Nested Subroutine Output}
+  \label{fig:nest-output}
+\end{figure}
+
+%% main program
+\begin{quote}\asmstyle
+\asmline{mov}{r0,7}; a(7)\\
+\asmline{push}{r0}; // provide parameter\\
+\asmline{sub}{sp,2}; // open room for links\\
+\asmline{call}{\textunderscore a}; // call\\
+\asmline{add}{sp,2}; // skip links\\
+\asmline{pop}{r0}; // fetch return value\\
+\asmline{halt}{}; // end program
+\end{quote}
+
+\clearpage
+%% procedure a(n)
+\begin{quote}\asmstyle
+\asmline[\textunderscore a]{}{}; \textbf{Procedure} a(n)\\
+\asmline{mov}{(sp+1),fp};\qquad // set up dynamic link\\
+\asmline{mov}{fp,sp}\\
+\asmline{mov}{r0,(fp+3)};\qquad \textbf{Return} c(n)\\
+\asmline{push}{r0};\qquad // provide parameter\\
+\asmline{sub}{sp,2};\qquad // open room for links\\
+\asmline{mov}{(sp+1),fp};\qquad // static link [c is inside a]\\
+\asmline{call}{c}\\
+\asmline{add}{sp,2};\qquad // skip links\\
+\asmline{pop}{r0};\qquad // fetch return value\\
+\asmline{mov}{(fp+3),r0};\qquad // copy it into return slot\\
+\asmline{}{}; \textbf{EndProcedure} [inner definitions follow]\\
+\asmline{mov}{fp,(fp+1)}; // restore dynamic link\\
+\asmline{ret}{}
+\end{quote}
+
+\vfill
+%% procedure b(m) inside a(n)
+\begin{quote}\asmstyle
+\asmline[b]{}{}; \textbf{Procedure} b(m) // inside a(n)\\
+\asmline{mov}{(sp+1),fp};\qquad // set up dynamic link\\
+\asmline{mov}{fp,sp}\\
+\asmline{mov}{r0,0x100}\\
+\asmline{xor}{r1,r1};\qquad\textbf{Local} i\\
+\asmline{}{};\qquad\(0\rightarrow\text{i}\)\\
+\asmline{}{};\qquad
+// reading \textit{n} from \textit{a} into \(\text{R}_2\)\\
+\asmline{mov}{r2,(fp+2)};\qquad // first get \textit{a}'s FP\\
+\asmline{mov}{r2,(r2+3)};\qquad
+// and fetch the first parameter, \textit{n}\\
+\asmline{sub}{r2,(fp+3)};\qquad
+// register \(\text{R}_2\) holds \(\text{\textit{n}}-\text{\textit{m}}\)\\
+\asmline[top]{cmp}{r1,r2};\qquad
+\textbf{While} \(\text{i}<\text{n}-\text{m}\)\\
+\asmline{br.s>=}{Xtop}\\
+\asmline{mov}{(r0),\textquotesingle~\textquotesingle};\qquad\qquad
+\(\text{``\textvisiblespace\textvisiblespace''}\rightarrow
+(\text{Terminal})\)\\
+\asmline{mov}{(r0),\textquotesingle~\textquotesingle}\\
+\asmline{add}{r1,1};\qquad\qquad\(\text{i}+1\rightarrow\text{i}\)\\
+\asmline{br}{top};\qquad\textbf{EndWhile}\\
+\asmline[Xtop]{xor}{r1,r1};\qquad\(0\rightarrow\text{i}\)\\
+\asmline{mov}{r2,(fp+3)};\qquad
+// register \(\text{R}_2\) holds \textit{m}\\
+\asmline[bot]{cmp}{r1,r2};\qquad\textbf{While} \(\text{i}<\text{m}\)\\
+\asmline{br.s>=}{Xbot}\\
+\asmline{mov}{(r0),\textquotesingle{}[\textquotesingle};\qquad\qquad
+\(\text{``[]''}\rightarrow(\text{Terminal})\)\\
+\asmline{mov}{(r0),\textquotesingle{}]\textquotesingle}\\
+\asmline{add}{r1,1};\qquad\qquad\(\text{i}+1\rightarrow\text{i}\)\\
+\asmline{br}{bot};\qquad\textbf{EndWhile}\\
+\asmline[Xbot]{mov}{(r0),\textquotesingle\textbackslash n\textquotesingle};\qquad \(\text{`\textbackslash n'}\rightarrow(\text{Terminal})\)\\
+\asmline{}{};\qquad \textbf{Return} m // already in place\\
+\asmline{}{}; \textbf{EndProcedure}\\
+\asmline{mov}{fp,(fp+1)}; // restore dynamic link\\
+\asmline{ret}{}
+\end{quote}
+
+\clearpage
+%% procedure c(n) inside a(n)
+\begin{quote}\asmstyle
+\asmline[c]{}{}; \textbf{Procedure} c(n) // inside a(n)\\
+\asmline{mov}{(sp+1),fp};\qquad // set up dynamic link\\
+\asmline{mov}{fp,sp}\\
+\asmline{xor}{r0,r0};\qquad \textbf{Local} s\\
+\asmline{push}{r0};\qquad \(0\rightarrow\text{s}\)\\
+\asmline{cmp}{(fp+3),0};\qquad\textbf{If} \(\text{n}>0\) \textbf{Then}\\
+\asmline{br.s<=}{exit}\\
+\null\\
+\asmline{mov}{r0,(fp+3)};\qquad\qquad \(\text{s}+\text{b(n)}\rightarrow\text{s}\)\\
+\asmline{push}{r0};\qquad\qquad // provide parameter\\
+\asmline{sub}{sp,2};\qquad\qquad // open room for links\\
+\asmline{mov}{(sp+1),(fp+2)};\qquad\qquad // static link [b is inside a]\\
+\asmline{call}{b}\\
+\asmline{add}{sp,2};\qquad\qquad // skip links\\
+\asmline{pop}{r1};\qquad\qquad // fetch return value\\
+\asmline{add}{(fp-1),r1}\\
+\null\\
+\asmline{mov}{r0,(fp+3)};\qquad\qquad\(\text{s}+\text{c}(\text{n}-2)\rightarrow\text{s}\)\\
+\asmline{sub}{r0,2}\\
+\asmline{push}{r0};\qquad\qquad // provide parameter\\
+\asmline{sub}{sp,2};\qquad\qquad // open room for links\\
+\asmline{mov}{(sp+1),(fp+2)};\qquad\qquad // static link [c is inside a]\\\asmline{call}{c}\\
+\asmline{add}{sp,2};\qquad\qquad // skip links\\
+\asmline{pop}{r1};\qquad\qquad // fetch return value\\
+\asmline{add}{(fp-1),r1}\\
+\null\\
+\asmline{mov}{r0,(fp+3)};\qquad\qquad \(\text{s}+\text{b(n)}\rightarrow\text{s}\)\\
+\asmline{push}{r0};\qquad\qquad // provide parameter\\
+\asmline{sub}{sp,2};\qquad\qquad // open room for links\\
+\asmline{mov}{(sp+1),(fp+2)};\qquad\qquad // static link [b is inside a]\\
+\asmline{call}{b}\\
+\asmline{add}{sp,2};\qquad\qquad // skip links\\
+\asmline{pop}{r1};\qquad\qquad // fetch return value\\
+\asmline{add}{(fp-1),r1}\\
+\asmline[exit]{}{};\qquad\textbf{EndIf}\\
+\asmline{pop}{r0};\qquad\textbf{Return} s\\
+\asmline{mov}{(fp+3),r0}\\
+\asmline{}{}; \textbf{EndProcedure}\\
+\asmline{mov}{fp,(fp+1)}; // restore dynamic link\\
+\asmline{ret}{}
+\end{quote}
+
+\clearpage
+The \texttt{\textit{c}} procedure is recursive.
+During the first call to \texttt{\textit{b}}
+inside of the first recursive call to \texttt{\textit{c}}
+(the second call to \texttt{\textit{c}} overall),
+the stack contains an \texttt{\textit{a}} frame,
+two \texttt{\textit{c}} frames, and a \texttt{\textit{b}} frame,
+in that order, and appears as in Figure~\ref{fig:nest}.
+
+\begin{figure}[ht!]\centering
+  \begin{tblr}{colspec={r|c|l}}
+    &\textit{higher addresses}\\\\\cline[3pt]{2}
+    &\texttt{\textit{a}}'s \texttt{n}\\\cline{2}
+    &????&\textit{outer static link}\\\cline{2}
+    &????&\textit{outer dynamic link}\\\cline{2}
+    \texttt{\textit{a}}'s frame&return address\\\cline[3pt]{2}
+    &\(\text{\texttt{\textit{c}}}_1\)'s \texttt{n}\\\cline{2}
+    &\texttt{\textit{a}}'s \texttt{FP}&\textit{static}\\\cline{2}
+    &\texttt{\textit{a}}'s \texttt{FP}&\textit{dynamic}\\\cline{2}
+    \(\text{\texttt{\textit{c}}}_1\)'s frame&return address\\\cline{2}
+    &\(\text{\texttt{\textit{c}}}_1\)'s \texttt{s}\\\cline[3pt]{2}
+    &\(\text{\texttt{\textit{c}}}_2\)'s \texttt{n}\\\cline{2}
+    &\texttt{\textit{a}}'s \texttt{FP}&\textit{static}\\\cline{2}
+    &\(\text{\texttt{\textit{c}}}_1\)'s \texttt{FP}&%
+    \textit{dynamic}\\\cline{2}
+    \(\text{\texttt{\textit{c}}}_2\)'s frame&return address\\\cline{2}
+    &\(\text{\texttt{\textit{c}}}_2\)'s \texttt{s}\\\cline[3pt]{2}
+    &\texttt{m}\\\cline{2}
+    &\texttt{\textit{a}}'s \texttt{FP}&\textit{static}\\\cline{2}
+    &\(\text{\texttt{\textit{c}}}_2\)'s \texttt{FP}&%
+    \textit{dynamic}\\\cline{2}
+    \texttt{\textit{b}}'s frame&return address&%
+    \hspace*{-3mm}\({}\leftarrow\text{SP}\)\\\cline[3pt]{2}\\
+    &\textit{lower addresses}\\
+  \end{tblr}
+  \caption{Stack Frames for Nested Procedures}
+  \label{fig:nest}
+\end{figure}
+
+\section{Transfer of Control Between System \& Programs}
+A user program can raise a signal to an operating system
+by means of the \texttt{TRAP} instruction.
+This is similar to a \texttt{CALL} in that the return address
+is pushed to the stack and control is transferred to a new location,
+except the stack used is the \emph{system} stack,
+and the location is limited to one of eight available
+system entry points.
+The system routine entered by this mechanism should end with
+\texttt{RTP} to return to the user program.
+
+Interrupts are handled by the same mechanism.
+A return address is pushed to the system stack,
+and program execution proceeds in system mode
+at a location specified by the interrupt priority level.
+As an interrupt may occur at any time, system software
+has special responsibilities:
+all registers that may be used by a user program,
+including the condition codes,
+must be in the same state at exit as they were in at entry.
+Typically, this is accomplished by wrapping the system routine
+as follows.
+\begin{quote}\asmstyle
+\asmline{push}{r0}\\
+\asmline{orsr}{r0,0}\\
+\asmline{push}{r0}\\
+\dots\\
+\asmline{pop}{r0}\\
+\asmline{movsr}{r0,r0}\\
+\asmline{pop}{r0}\\
+\asmline{rtp}{}
+\end{quote}
+These responsibilities are a large part of the cost
+of switching between a user program and the system context.
+
+\begin{table}[ht!]\centering
+  \caption{Instructions for Control Flow}
+  \label{tbl:control}
+  \begin{tabular}{lcl}
+    \toprule
+    \rlap{Encoding}&&Instruction\\\midrule
+    \texttt{0\textit{m}\textit{c}\textit{s}},
+    \(\text{0}\leq\text{\texttt{\textit{m}}}\leq \text{3}\)
+    &\texttt{BR}&Branch Relative\\
+    \texttt{0\textit{m}\textit{c}\textit{s}},
+    \(\text{4}\leq\text{\texttt{\textit{m}}}\leq \text{7}\)
+    &\texttt{BA}&Branch Absolute\\
+    \texttt{0\textit{m}\textit{c}\textit{s}},
+    \(\text{8}\leq\text{\texttt{\textit{m}}}\leq \text{B}\)
+    &\texttt{CALL}&Branch to Subroutine\\
+    \texttt{0D\textit{c}0}&\texttt{RET}&Return from Subroutine\\
+    \texttt{D5\textit{c}\textit{v}}&\texttt{TRAP}&Software Interrupt\\
+    \texttt{0D\textit{c}F}&\texttt{RTP}&Return to Program\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\appendix
+
+\chapter{Suggested Implementation Strategy}
+The \textsc{stol} architecture is intended
+to be large enough to be useful
+and a viable target for a simple compiler,
+yet small enough to be implemented in an educational setting
+using a circuit simulator such as Logisim Evolution.
+To facilitate this,
+the instruction encodings are designed to require minimal decode logic,
+and the architecture is stratified into layers
+that build upon one another.
+Figure~\ref{fig:system} depicts a model of a complete computer system.
+The \textsc{cpu} itself can be built up in stages
+before connecting to a bus or external devices.
+The sequence presented in this appendix
+is far from the only possible approach.
+
+\begin{figure}[ht!]\centering
+  \setbox\blob\hbox{Register}
+  \begin{tikzpicture}
+    \draw (0,0.75) -- (0.25,1) -- (1.5,1) -- (1,0)
+    -- (-1,0) -- (-1.5,1) -- (-0.25,1) -- cycle;
+    \node[anchor=south] at (0,0) {ALU};
+    \node[draw,text width=\wd\blob,align=center,anchor=north]
+         at (0,2.5) {Register File};
+    \draw (-1.75,-0.25) rectangle (1.75,2.75);
+    \node[anchor=south] at (0,2.75) {CPU};
+    \draw (2.5,-0.25) rectangle (4,2.75);
+    \node[anchor=south,text width=1in,align=center]
+    at (3.25,2.75) {Main Memory};
+    \draw[line width=1mm] (1.75,1.25) -- (2.5,1.25);
+    \draw (1.125,-2) rectangle (3.125,-1);
+    \node[anchor=east] at (1.125,-1.5) {I/O Controller};
+    \draw[line width=1mm] (2.125,1.25) -- (2.125,-1);
+  \end{tikzpicture}
+  \caption{Computer System Overview}
+  \label{fig:system}
+\end{figure}
+
+\section{Combinational Components}
+The simplest circuits are combinational circuits,
+in which output is dependent only on input, not time.
+With that in mind, construction should begin
+with the Arithmetic and Logic Unit (\textsc{alu}),
+as that portion is purely combinational.
+
+Specifically, components should be created to perform
+the 16-bit arithmetic, logic, and shift operations
+provided by the \textsc{stol} architecture,
+those whose opcode field (the four most-significant bits)
+is between \texttt{2} and \texttt{C}, inclusive.
+Each should have inputs for two operands (A and B) and the status,
+and should have outputs for the result and flags.
+Test cases should be created and evaluated at all points,
+by adjusting the input pins and ensuring
+that the associated outputs are correct.
+
+Once the operations have been constructed,
+the \textsc{alu} can be assembled
+by computing all operations in parallel
+and using multiplexers to select only the relevant outputs.
+
+\section{Registers}
+After the \textsc{alu} is in place,
+the sixteen general-purpose registers should be added
+into a \emph{register file}.
+It should have at least two outputs, to supply the A and B
+inputs of the \textsc{alu}.
+Its inputs should include
+two four-bit selections,
+a data input,
+a write-enable for the destination register,
+and the clock.
+
+The A and B outputs of the register bank
+should be connected to the associated inputs of the \textsc{alu},
+but not directly.
+By running each through a multiplexer,
+immediate data can be used as an input
+without first loading it into a register.
+The output of the \textsc{alu} can, for now, be directly connected
+to the input of the register bank.
+Once this configuration is in working order,
+an input to the system can be added
+from which to read instructions from external memory.
+By detecting whether the source is a register
+or a short-format immediate value,
+this input can be configured to represent some sample instructions
+to verify that the results are as intended.
+
+\section{First External Memory}
+A reasonable next step would be to add a program counter
+to the system alongside a reset pin.
+The reset pin can clear all of the registers,
+or just the program counter.
+The program counter can initially be wired in such a way
+that it increases at every clock cycle
+and is connected to an output ``address'' pin.
+Then even in this degraded state,
+the system can be connected to a \textsc{rom} device
+in order to execute purely sequential programs
+built of only single-cycle instructions.
+This is sufficient to compute, say,
+a specific number in the Fibonacci sequence.
+Testing is easier when the test program
+can be loaded into \textsc{rom}
+rather than entered by hand.
+
+\section{Multicycle Instructions \& Other Addressing Modes}
+Multicycle operations are coordinated by an internal state machine.
+This state machine should begin in a predictable state upon reset.
+After each instruction is fetched from main memory,
+it can be decoded to determine
+whether all necessary information is present,
+or if more memory accesses must occur to retrieve
+the desired operands.
+
+A reasonable next step is to implement this state machine
+and allow purely sequential programs to use all four available
+addressing modes.
+In order to write to memory,
+some \textsc{ram} needs to be added
+into the memory map,
+and an address decoder should be constructed
+that determines which memory module is being
+read from or written to at any given time.
+
+\section{Branching Control Flow}
+At this point, the relative and absolute branching instructions
+can be implemented with little additional hardware.
+The subroutine call and return instructions
+will likely require additional states in the state machine
+and additional hardware to control the stack pointer, \(\text{R}_{15}\).
+After implementing these instructions
+alongside \texttt{PUSH} and \texttt{POP},
+most of the sample code in this manual can be run.
+
+\section{Distinguishing System Mode \& Program Mode}
+To this point, nothing has required privilege separation
+except perhaps ensuring correct functionality
+of the instructions that act upon the status register.
+The separation is achieved by implementing a system
+to select between two stack pointers based on privilege mode,
+and ensuring that \texttt{PSPR}, \texttt{PSPRW}, and \texttt{PSPW}
+only ever act on the program stack pointer.
+The \texttt{RTP} instruction could have been implemented
+as an alias for \texttt{RET} in the previous phase,
+but now must properly act upon the nesting-level field
+of the status register.
+The \texttt{TRAP} instruction is similar
+to a special-case of \texttt{CALL},
+but must also set up the status register.
+After this phase is complete,
+the \textsc{cpu} is essentially finished.
+A working system can be built around this core.
+
+\section{Interrupt Handling}
+The final step is to account for interrupts
+by adding the request and priority inputs
+and the acknowledge output.
+The state machine is involved,
+as interrupts should only be handled \emph{between} instructions,
+not \emph{within} them.
+
+\section{Advanced Stages}
+At this point, a fully working \textsc{cpu} has been built
+and installed in a system with external memory.
+Those seeking to go further could choose among several
+additional features to add.
+\begin{itemize}
+\item \textbf{Memory protection:}
+  A simple address decoder only determines where in memory
+  an instruction is to be read or written.
+  The \textsc{cpu} can be augmented with output pins
+  indicating whether it is reading, writing, or executing
+  the memory at the specified address,
+  and the address decoder can be augmented
+  to deny certain combinations at specific locations.
+  This transforms the address decoder
+  into a \concept{memory protection unit}.
+  A process running in system mode
+  should be able to change the protections
+  but a process in program mode attempting to do the same
+  should cause a signal to be raised.
+\item \textbf{Architecture extensions:}
+  Modern systems have a variety of instructions
+  that perform different kinds of operations
+  in hardware that would previously
+  have been implemented in software.
+  The hardware implementation
+  is generally faster and more energy-efficient
+  than the equivalent software.
+  Using instruction words of the form
+  \texttt{E\textit{x}\textit{y}\textit{z}},
+  one could add a few additional instructions.
+  Using such instructions as \concept{instruction prefixes}
+  allows for a large number of extensions.
+\item \textbf{Coprocessors:}
+  In the same vein, early systems used separate computing hardware
+  for floating-point operations and other advanced features.
+  One could add a mechanism for communicating with a coprocessor.
+  The coprocessor might be attached as yet another
+  memory-mapped \textsc{i/o} device.
+  Alternatively, one could address a coprocessor
+  using port \textsc{i/o}
+  by creating additional instructions of the form
+  \texttt{F\textit{x}\textit{y}\textit{z}}.
+\item \textbf{Cache memory:}
+  Large main memory systems tend to be slower
+  than the processors to which they are attached.
+  To simulate this, one could place the main memory
+  behind a clock divider.
+  When data is not available,
+  the processor must wait for it to arrive.
+  Placing a cache between the processor and main memory
+  can alleviate this concern when accesses are local.
+\item \textbf{Pipelining:}
+  In the reference implementation of the \textsc{stol} architecture,
+  the shortest instructions retire in a single clock cycle
+  but the longest require up to six cycles to execute.
+  By modifying the state machine and adding additional components,
+  the average time required per instruction could be brought down
+  by overlapping portions of their execution.
+  What happens when a control-flow instruction is executed?
+\end{itemize}
+
+
+\chapter{Assembly Language Syntax}\label{ch:asm}
+This appendix describes the syntax
+expected by the \texttt{stolas} assembler
+and used in examples throughout this manual.
+
+Assembly source listings are provided in \texttt{typewriter font}.
+Text in \texttt{\textit{italics}} represents a metavariable
+to be replaced by a suitable object,
+be that an integer constant, a label, a register name, or otherwise.
+Other text is to be written exactly as it appears.
+Within code listings,
+instruction mnemonics are written in \texttt{\textbf{boldface}}
+for clarity, as a rudimentary form of syntax highlighting.
+
+\section{Statements}
+Each line of an assembly-language program is a statement,
+composed of four fields, each of which optional.
+These fields are a label,
+an instruction mnemonic,
+an operand list,
+and a comment.
+An operand list cannot be provided
+if an instruction mnemonic is omitted.
+The label, if present, is separated from the remainder of the line
+by a colon (\texttt{:}),
+and the comment, if present, is separated by a semicolon (\texttt{;}).
+\begin{quote}\asmstyle
+\textit{label}:~\textit{mnemonic}~\textit{operands};~\textit{comment}
+\end{quote}
+Instruction mnemonics are case-insensitive.
+An operand list is a sequence of one or more operands,
+with each but the first separated from the previous
+by a comma (\texttt{,}).
+Each instruction has a particular type and number
+of operands expected.
+The assembly language consistently places
+the destination location, if any, first in the operand list,
+and the instruction encoding is designed to match this.
+
+\section{Operands}
+There are four addressing modes available.
+The immediate addressing mode
+is indicated by a numeric constant, ``\texttt{\textit{imm}}'',
+or the name of a label ``\texttt{\textit{label}}''.
+
+The register direct addressing mode,
+which uses the contents of a register directly,
+is indicated by a register name alone, ``\texttt{\textit{reg}}''.
+
+The register-indirect mode,
+which uses the contents of memory
+at the location specified by the value in a register,
+is indicated by a register name in parentheses,
+``\texttt{(\textit{reg})}''.
+
+Finally, the register-indirect with offset mode,
+which uses the contents of memory
+at the location specified by the sum of
+the value in a register and a numeric constant,
+is indicated by a register name in parentheses,
+a plus sign (\texttt{\(+\)}) or minus sign (\texttt{\(-\)}),
+and then the numeric value.
+``\texttt{(\(\textit{reg}+\textit{imm}\))}'' or
+``\texttt{(\(\textit{reg}-\textit{imm}\))}''.
+
+\section{Register Names}
+The case-insensitive strings
+\texttt{r0}, \texttt{r1}, \texttt{r2}, \texttt{r3},
+\texttt{r4}, \texttt{r5}, \texttt{r6}, \texttt{r7},
+\texttt{r8}, \texttt{r9}, \texttt{r10}, \texttt{r11},
+\texttt{r12}, \texttt{r13}, \texttt{r14}, \texttt{r15},
+\texttt{fp}, and \texttt{sp}
+refer to the named registers, and are reserved words.
+They cannot be used as label names.
+
+\section{Labels}
+A label is a case-sensitive sequence of characters
+containing Latin alphabetic letters
+(\texttt{a}--\texttt{z} and \texttt{A}--\texttt{Z}),
+underscores (\texttt{\textunderscore}),
+and numeric digits (\texttt{0}--\texttt{9}).
+While a label may contain digits, it may not begin with one.
+As previously mentioned, the names of registers are reserved
+and cannot be used as label names.
+
+A label followed by a colon (\texttt{:})
+binds the current address to the label.
+It is an error to bind more than one address to the same label.
+When used as an operand,
+a label represents the address to which it is bound.
+The expressions ``\texttt{@}'',
+``\(\texttt{@}+\texttt{\textit{imm}}\)'',
+and ``\(\texttt{@}-\texttt{\textit{imm}}\)''
+refer to the current address,
+a positive offset from the current address,
+and a negative offset from the current address,
+respectively.
+
+The assembler also provides special syntax to assign
+a specific value other than the current location to a label,
+which essentially defines an integer constant.
+\begin{quote}\asmstyle
+/define \textit{label} \textit{imm}
+\end{quote}
+
+\section{Numeric Values}
+Constant numeric values may be specified in one of three bases:
+\begin{itemize}
+\item Hexadecimal: constant begins with \texttt{0x}
+  and contains the digits \texttt{0}--\texttt{9}
+  or the letters \texttt{a}--\texttt{f},
+  which are treated as 10--15.
+  Constants are case-insensitive.
+\item Octal: constant begins with \texttt{0}
+  and contains the digits \texttt{0}--\texttt{7}.
+\item Decimal: constant begins with a digit \texttt{1}--\texttt{9}
+  and contains the digits \texttt{0}--\texttt{9}.
+\end{itemize}
+Note that \texttt{09} is \emph{not} a valid numeric constant.
+Constants can be negated by prefixing a minus sign (\texttt{\(-\)}).
+Additionally, an \textsc{ascii} character surrounded by single quotes
+is a numeric constant whose value is its \textsc{ascii} value.
+Some escape sequences that stand in for particular characters,
+summarized in Table~\ref{tbl:escapes}, are provided.
+\begin{table}[ht!]\centering
+  \caption{Escape Sequences}
+  \label{tbl:escapes}
+  \begin{tabular}{lll}
+    \toprule
+    Escape&Value&Name\\\midrule
+    \texttt{\textbackslash a}&7&Bell\\
+    \texttt{\textbackslash b}&8&Backspace\\
+    \texttt{\textbackslash f}&12&Form Feed\\
+    \texttt{\textbackslash n}&10&New Line\\
+    \texttt{\textbackslash r}&13&Carriage Return\\
+    \texttt{\textbackslash t}&9&Horizontal Tab\\
+    \texttt{\textbackslash v}&11&Vertical Tab\\
+    \texttt{\textbackslash \textquotedbl}&34&Quotation Mark\\
+    \texttt{\textbackslash \textquotesingle}&39&Apostrophe\\
+    \texttt{\textbackslash \textbackslash}&92&Backslash\\
+    \texttt{\textbackslash\textit{nnn}}&&\textit{octal value}\\
+    \bottomrule
+  \end{tabular}\\
+  The octal escape may have one to three digits in the range
+  \texttt{0}--\texttt{7}.
+\end{table}
+
+\section{Sections}
+The \texttt{stolas} assembler is aware of two segments:
+one segment combining code and read-only data
+(``the code segment'') in which assembly begins,
+and the data segment,
+which contains uninitialized variables in main memory.
+The code segment includes assembled instructions,
+but can also contain read-only data such as constants and strings.
+The \texttt{DW} pseudo-operation requires a nonempty operand list
+and places each operand as a literal 16-bit word
+directly into the instruction stream.
+\begin{quote}\asmstyle
+\textbf{dw} \textit{imm}[,\textit{imm}\dots]
+\end{quote}
+Any of the operands to \texttt{dw}
+may be a quoted string:
+a series of characters,
+including the escape sequences of Table~\ref{tbl:escapes},
+surrounded by double-quotes (\texttt{\textquotedbl}).
+
+The data segment is entered with the following statement.
+\begin{quote}\asmstyle
+/bss
+\end{quote}
+Variables can be declared by binding a label
+and reserving the requisite amount of space,
+specified as a number of 16-bit words.
+\begin{quote}\asmstyle
+\textit{variable}: \textbf{res} \textit{nwords}
+\end{quote}
+No other statements should appear in the data section.
+
+
+\chapter{Instruction Set Summary}\label{ch:isa}
+This appendix provides a brief overview
+of the \textsc{stol} instruction set.
+Each page is headed with the internal mnemonic and short description
+of an instruction.
+A mathematical or logical description of the operation is provided,
+as well as the standard assembler syntax.
+
+\section*{Operands}
+\begin{tabular}{ll@{\hspace*{0.5in}}ll}
+  \texttt{\(\text{R}_n\)}&general-purpose register&
+  \texttt{PSP}&program stack pointer\\
+  \texttt{\texttt{\textit{i}}}&integer value&
+  \texttt{SSP}&system stack pointer\\
+  \texttt{PC}&program counter&
+  \texttt{SP}&stack pointer\\
+\end{tabular}
+\section*{Qualifiers}
+\begin{tabular}{ll}
+  \(\langle\text{register}\rangle{:}n\text{[}{:}m\text{]}\)
+  &\(n^{\text{th}}\) [through \(m^{\text{th}}\)] bit of the register,
+  0 is least-significant,\\
+  \((\langle\text{register}\rangle)\)
+  &value in memory addressed by the register\\
+  \((-\langle\text{register}\rangle)\)
+  &value in memory addressed by the predecremented register\\
+  \((\langle\text{register}\rangle+)\)
+  &value in memory addressed by the postincremented register\\
+  \((\langle\text{register}\rangle+i)\)
+  &value in memory addressed by the sum of the register
+  and \texttt{\(i\)}
+\end{tabular}
+\section*{Operations}
+\begin{tabular}{cl}
+  \(\rightarrow\)
+  &write the left operand into the location specified by the right
+  operand(s)\\
+  \(+\)&add\\
+  \(-\)&subtract\\
+  \(\sim\)&bitwise logical NOT\\
+  \(\wedge\)&bitwise logical AND\\
+  \(\vee\)&bitwise logical inclusive-OR\\
+  \(\oplus\)&bitwise logical exclusive-OR\\
+  \(\triangleleft\)&shift the left operand leftward
+  by the number of positions specified by the right\\
+  \(\triangleright\)&shift the left operand rightward
+  by the number of positions specified by the right\\
+  \(\circlearrowleft\)&rotate the left operand leftward
+  by the number of positions specified by the right\\
+  \(\circlearrowright\)&rotate the left operand rightward
+  by the number of positions specified by the right
+\end{tabular}
+
+
+\instruction[Add]{ADD}
+\subsection*{Operation}
+\(\text{Destination}+\text{Source}\rightarrow\text{Destination}\)
+
+\subsection*{Assembler Syntax}
+\texttt{add \textit{destination},\textit{source}}
+
+\subsection*{Description}
+Add the source operand to the destination operand
+and store the result in the destination location.
+
+\subsection*{Addressing Modes}
+\begin{tabular}{rcccc}
+  \toprule
+  Mode&&Syntax&Source&Destination\\
+  \midrule
+  Immediate&00&\texttt{\textit{i}}&&\(\times\)\\
+  Register Direct&01&\texttt{\(\text{R}_n\)}\\
+  Register Indirect&10&\texttt{(\(\text{R}_n\))}\\
+  Register Indirect with Offset&11&\texttt{(\(\text{R}_n\)+\textit{i})}\\
+  \bottomrule
+\end{tabular}
+
+\subsection*{Instruction Encoding}
+\encoding{0&1&1&0%
+&\multicolumn{2}{|c|}{dmode}%
+&\multicolumn{2}{|c|}{smode}
+&\multicolumn{4}{|c|}{destination}
+&\multicolumn{4}{|c|}{source}}\\\null\qquad
+\encoding{\multicolumn{16}{|c|}{optional source extension word}}\\
+\null\qquad\qquad
+\encoding{\multicolumn{16}{|c|}{optional destination extension word}}
+
+\subsection*{Flags}
+\begin{multicols}{2}\noindent
+  C: set if carry occurred\\
+  N: set if result is negative
+
+  \columnbreak\noindent
+  V: set if overflow occurred\\
+  Z: set if result is zero
+\end{multicols}
+
+
+\instruction[Add with Carry]{ADDC}
+\subsection*{Operation}
+\(\text{Destination}+\text{Source}+\text{\texttt{SR}}{:}3
+\rightarrow\text{Destination}\)
+
+\subsection*{Assembler Syntax}
+\texttt{addc \textit{destination},\textit{source}}
+
+\subsection*{Description}
+Add the source operand to the destination operand
+along with the carry bit
+and store the result in the destination location.
+
+\subsection*{Addressing Modes}
+\begin{tabular}{rcccc}
+  \toprule
+  Mode&&Syntax&Source&Destination\\
+  \midrule
+  Immediate&00&\texttt{\textit{i}}&&\(\times\)\\
+  Register Direct&01&\texttt{\(\text{R}_n\)}\\
+  Register Indirect&10&\texttt{(\(\text{R}_n\))}\\
+  Register Indirect with Offset&11&\texttt{(\(\text{R}_n\)+\textit{i})}\\
+  \bottomrule
+\end{tabular}
+
+\subsection*{Instruction Encoding}
+\encoding{0&1&1&1%
+&\multicolumn{2}{|c|}{dmode}%
+&\multicolumn{2}{|c|}{smode}
+&\multicolumn{4}{|c|}{destination}
+&\multicolumn{4}{|c|}{source}}\\\null\qquad
+\encoding{\multicolumn{16}{|c|}{optional source extension word}}\\
+\null\qquad\qquad
+\encoding{\multicolumn{16}{|c|}{optional destination extension word}}
+
+\subsection*{Flags}
+\begin{multicols}{2}\noindent
+  C: set if carry occurred\\
+  N: set if result is negative
+
+  \columnbreak\noindent
+  V: set if overflow occurred\\
+  Z: set if result is zero
+\end{multicols}
+
+
+\instruction[Bitwise Logical AND]{AND}
+\subsection*{Operation}
+\(\text{Destination}\wedge\text{Source}\rightarrow\text{Destination}\)
+
+\subsection*{Assembler Syntax}
+\texttt{and \textit{destination},\textit{source}}
+
+\subsection*{Description}
+Compute the bitwise logical AND
+of the source operand and destination operand
+and store the result in the destination location.
+
+\subsection*{Addressing Modes}
+\begin{tabular}{rcccc}
+  \toprule
+  Mode&&Syntax&Source&Destination\\
+  \midrule
+  Immediate&00&\texttt{\textit{i}}&&\(\times\)\\
+  Register Direct&01&\texttt{\(\text{R}_n\)}\\
+  Register Indirect&10&\texttt{(\(\text{R}_n\))}\\
+  Register Indirect with Offset&11&\texttt{(\(\text{R}_n\)+\textit{i})}\\
+  \bottomrule
+\end{tabular}
+
+\subsection*{Instruction Encoding}
+\encoding{1&0&1&0%
+&\multicolumn{2}{|c|}{dmode}%
+&\multicolumn{2}{|c|}{smode}
+&\multicolumn{4}{|c|}{destination}
+&\multicolumn{4}{|c|}{source}}\\\null\qquad
+\encoding{\multicolumn{16}{|c|}{optional source extension word}}\\
+\null\qquad\qquad
+\encoding{\multicolumn{16}{|c|}{optional destination extension word}}
+
+\subsection*{Flags}
+\begin{multicols}{2}\noindent
+  C: unaffected\\
+  N: set if result is negative
+
+  \columnbreak\noindent
+  V: unaffected\\
+  Z: set if result is zero
+\end{multicols}
+
+
+\instruction[Logical AND into Status]{ANDSR}
+\subsection*{Operation}
+\(\text{\texttt{SR}}\rightarrow\text{Destination}\)\\
+if system mode:\\
+\null\qquad
+\(\text{\texttt{SR}}\wedge\text{Source}\rightarrow\text{\texttt{SR}}\)\\
+else:\\
+\null\qquad
+\(\text{\texttt{SR}}\wedge\text{Source}\rightarrow
+\text{\texttt{SR}}{:}0{:}3\)
+
+\subsection*{Assembler Syntax}
+\texttt{andsr \textit{destination},\textit{source}}
+
+\subsection*{Description}
+Store the content of the status register into the destination location.
+Additionally, compute the bitwise logical AND
+of the source operand and status register
+and store the result back into the status register.
+In system mode, the entire status register is written.
+In program mode, only the condition flags are modified.
+Note that these operations are simultaneous;
+if the source and destination refer to the same location,
+the original source is used.
+
+\subsection*{Addressing Modes}
+\begin{tabular}{rcccc}
+  \toprule
+  Mode&&Syntax&Source&Destination\\
+  \midrule
+  Immediate&00&\texttt{\textit{i}}&&\(\times\)\\
+  Register Direct&01&\texttt{\(\text{R}_n\)}\\
+  Register Indirect&10&\texttt{(\(\text{R}_n\))}&&\(\times\)\\
+  Register Indirect with Offset&11&\texttt{(\(\text{R}_n\)+\textit{i})}
+  &&\(\times\)\\
+  \bottomrule
+\end{tabular}
+
+\subsection*{Instruction Encoding}
+\encoding{0&0&1&0%
+&1&0%
+&\multicolumn{2}{|c|}{smode}
+&\multicolumn{4}{|c|}{destination}
+&\multicolumn{4}{|c|}{source}}\\\null\qquad
+\encoding{\multicolumn{16}{|c|}{optional source extension word}}
+
+\subsection*{Flags}
+\begin{multicols}{2}\noindent
+  C: set by operation\\
+  N: set by operation
+
+  \columnbreak\noindent
+  V: set by operation\\
+  Z: set by operation
+\end{multicols}
+
+
+\instruction[Arithmetic Shift Left]{ASL}
+\subsection*{Operation}
+\(\text{Destination}\triangleleft\text{Source}\rightarrow
+\text{Destination}\)
+
+\subsection*{Assembler Syntax}
+\texttt{asl \textit{destination},\textit{source}}
+
+\subsection*{Description}
+Shift the destination register
+leftward the number of times indicated by the unsigned source operand
+and store the result in the destination register.
+The carry flag is set if any set bit is shifted out at any point.
+The overflow flag is set if the sign changes at any point.
+Zeros are shifted into newly open positions.
+
+\begin{figure}[htb]\centering
+  \begin{tikzpicture}[x=1.5in]
+    \node[draw] at (0,0) (C) {C};
+    \node[draw,text width=2in,align=center] at (1,0) (S) {Source};
+    \node[draw] at (2,0) (Z) {0};
+    \path[->,thick] (Z) edge (S) (S) edge (C);
+  \end{tikzpicture}
+  \caption{Arithmetic Shift Left Operation}
+  \label{fig:asl}
+\end{figure}
+
+\subsection*{Addressing Modes}
+\begin{tabular}{rcccc}
+  \toprule
+  Mode&&Syntax&Source&Destination\\
+  \midrule
+  Immediate&00&\texttt{\textit{i}}&\(\dagger\)&\(\times\)\\
+  Register Direct&01&\texttt{\(\text{R}_n\)}\\
+  Register Indirect&10&\texttt{(\(\text{R}_n\))}&\(\times\)&\(\times\)\\
+  Register Indirect with Offset&11&\texttt{(\(\text{R}_n\)+\textit{i})}
+  &\(\times\)&\(\times\)\\
+  \bottomrule
+\end{tabular}
+
+\noindent
+\(\dagger\) only short immediate data (1--15) is permitted.
+
+\subsection*{Instruction Encoding}
+\encoding{0&0&1&1%
+&0&1&0%
+&{i/r}
+&\multicolumn{4}{|c|}{destination}
+&\multicolumn{4}{|c|}{source}}
+
+\subsection*{Flags}
+\begin{multicols}{2}\noindent
+  C: set if any set bit is shifted out\\
+  N: set if result is negative
+
+  \columnbreak\noindent
+  V: set if sign changes during operation\\
+  Z: set if result is zero
+\end{multicols}
+
+
+\instruction[Arithmetic Shift Right]{ASR}
+\subsection*{Operation}
+\(\text{Destination}\triangleright\text{Source}\rightarrow
+\text{Destination}\)
+
+\subsection*{Assembler Syntax}
+\texttt{asr \textit{destination},\textit{source}}
+
+\subsection*{Description}
+Shift the destination register
+rightward the number of times indicated by the unsigned source operand
+and store the result in the destination register.
+The carry flag is set if any set bit is shifted out at any point.
+The sign bit is shifted into newly open positions.
+
+\begin{figure}[htb]\centering
+  \begin{tikzpicture}[x=1.5in]
+    \node[draw,text width=2in,align=center] at (1,0) (S) {Source};
+    \node[draw] at (2,0) (C) {C};
+    \clip ([xshift=-3mm]S.north west)
+        rectangle ([xshift=1mm,yshift=-3mm]C.south east);
+    \path[->,thick]
+      ([xshift=2mm]S.south west) edge[out=270,in=180,looseness=5] (S.west)
+      (S) edge (C);
+  \end{tikzpicture}
+  \caption{Arithmetic Shift Right Operation}
+  \label{fig:asr}
+\end{figure}
+
+\subsection*{Addressing Modes}
+\begin{tabular}{rcccc}
+  \toprule
+  Mode&&Syntax&Source&Destination\\
+  \midrule
+  Immediate&00&\texttt{\textit{i}}&\(\dagger\)&\(\times\)\\
+  Register Direct&01&\texttt{\(\text{R}_n\)}\\
+  Register Indirect&10&\texttt{(\(\text{R}_n\))}&\(\times\)&\(\times\)\\
+  Register Indirect with Offset&11&\texttt{(\(\text{R}_n\)+\textit{i})}
+  &\(\times\)&\(\times\)\\
+  \bottomrule
+\end{tabular}
+
+\noindent
+\(\dagger\) only short immediate data (1--15) is permitted.
+
+\subsection*{Instruction Encoding}
+\encoding{0&0&1&1%
+&0&1&1%
+&{i/r}
+&\multicolumn{4}{|c|}{destination}
+&\multicolumn{4}{|c|}{source}}
+
+\subsection*{Flags}
+\begin{multicols}{2}\noindent
+  C: set if any set bit is shifted out\\
+  N: set if result is negative
+
+  \columnbreak\noindent
+  V: always cleared\\
+  Z: set if result is zero
+\end{multicols}
+
+
+\instruction[Branch Absolute]{BA}
+\subsection*{Operation}
+if Condition:\\
+\null\qquad\(\text{Source}\rightarrow\text{\texttt{PC}}\)
+
+\subsection*{Assembler Syntax}
+\texttt{ba[.\textit{condition}] \textit{source}}
+
+\subsection*{Description}
+If the specified condition is met,
+program execution continues from the address specified
+by the source operand.
+Otherwise, execution proceeds to the next instruction.
+
+\subsection*{Addressing Modes}
+\begin{tabular}{rcccc}
+  \toprule
+  Mode&&Syntax&Source\\
+  \midrule
+  Immediate&00&\texttt{\textit{i}}\\
+  Register Direct&01&\texttt{\(\text{R}_n\)}\\
+  Register Indirect&10&\texttt{(\(\text{R}_n\))}\\
+  Register Indirect with Offset&11&\texttt{(\(\text{R}_n\)+\textit{i})}\\
+  \bottomrule
+\end{tabular}
+
+\subsection*{Instruction Encoding}
+\encoding{0&0&0&0%
+&0&1%
+&\multicolumn{2}{|c|}{smode}
+&\multicolumn{4}{|c|}{condition}
+&\multicolumn{4}{|c|}{source}}\\\null\qquad
+\encoding{\multicolumn{16}{|c|}{optional source extension word}}
+
+\subsection*{Flags}
+\begin{multicols}{2}\noindent
+  C: unaffected\\
+  N: unaffected
+
+  \columnbreak\noindent
+  V: unaffected\\
+  Z: unaffected
+\end{multicols}
+
+
+\instruction[Branch Relative]{BR}
+\subsection*{Operation}
+if Condition:\\
+\null\qquad\(\text{\texttt{PC}}+\text{Source}
+\rightarrow\text{\texttt{PC}}\)
+
+\subsection*{Assembler Syntax}
+\texttt{br[.\textit{condition}] \textit{source}}
+
+\subsection*{Description}
+If the specified condition is met,
+the program counter is displaced by the source operand
+and program execution continues from the resulting location.
+Otherwise, execution proceeds to the next instruction.
+
+\subsection*{Addressing Modes}
+\begin{tabular}{rcccc}
+  \toprule
+  Mode&&Syntax&Source\\
+  \midrule
+  Immediate&00&\texttt{\textit{i}}\\
+  Register Direct&01&\texttt{\(\text{R}_n\)}\\
+  Register Indirect&10&\texttt{(\(\text{R}_n\))}\\
+  Register Indirect with Offset&11&\texttt{(\(\text{R}_n\)+\textit{i})}\\
+  \bottomrule
+\end{tabular}
+
+\subsection*{Instruction Encoding}
+\encoding{0&0&0&0%
+&0&0%
+&\multicolumn{2}{|c|}{smode}
+&\multicolumn{4}{|c|}{condition}
+&\multicolumn{4}{|c|}{source}}\\\null\qquad
+\encoding{\multicolumn{16}{|c|}{optional source extension word}}
+
+\subsection*{Flags}
+\begin{multicols}{2}\noindent
+  C: unaffected\\
+  N: unaffected
+
+  \columnbreak\noindent
+  V: unaffected\\
+  Z: unaffected
+\end{multicols}
+
+
+\instruction[Branch to Subroutine]{CALL}
+\subsection*{Operation}
+if Condition:\\
+\null\qquad\(\text{\texttt{PC}}+E+1\rightarrow(-\text{\texttt{SP}})\)\\
+\null\qquad\(\text{Source}\rightarrow\text{\texttt{PC}}\)\\
+where \(E\) is the number of extension words present (0 or 1)
+
+\subsection*{Assembler Syntax}
+\texttt{call[.\textit{condition}] \textit{source}}
+
+\subsection*{Description}
+If the specified condition is met,
+the location of the next instruction is pushed to the stack
+and then program execution continues
+from the location specified by the source operand.
+Otherwise, execution proceeds to the next instruction.
+Note that the final execution address is computed
+before the location is pushed to the stack.
+
+\subsection*{Addressing Modes}
+\begin{tabular}{rcccc}
+  \toprule
+  Mode&&Syntax&Source\\
+  \midrule
+  Immediate&00&\texttt{\textit{i}}\\
+  Register Direct&01&\texttt{\(\text{R}_n\)}\\
+  Register Indirect&10&\texttt{(\(\text{R}_n\))}\\
+  Register Indirect with Offset&11&\texttt{(\(\text{R}_n\)+\textit{i})}\\
+  \bottomrule
+\end{tabular}
+
+\subsection*{Instruction Encoding}
+\encoding{0&0&0&0%
+&1&0%
+&\multicolumn{2}{|c|}{smode}
+&\multicolumn{4}{|c|}{condition}
+&\multicolumn{4}{|c|}{source}}\\\null\qquad
+\encoding{\multicolumn{16}{|c|}{optional source extension word}}
+
+\subsection*{Flags}
+\begin{multicols}{2}\noindent
+  C: unaffected\\
+  N: unaffected
+
+  \columnbreak\noindent
+  V: unaffected\\
+  Z: unaffected
+\end{multicols}
+
+
+\instruction[Compare]{CMP}
+\subsection*{Operation}
+\(\text{Destination}-\text{Source}\)
+
+\subsection*{Assembler Syntax}
+\texttt{cmp \textit{destination},\textit{source}}
+
+\subsection*{Description}
+Subtract the source operand from the destination operand
+and set the condition codes accordingly,
+but do not store the result anywhere.
+Note that in the reference implementation,
+a write is still performed,
+but the value is the original contents of the destination location.
+This can be an issue if the location
+is memory-mapped \textsc{i/o}.
+
+\subsection*{Addressing Modes}
+\begin{tabular}{rcccc}
+  \toprule
+  Mode&&Syntax&Source&Destination\\
+  \midrule
+  Immediate&00&\texttt{\textit{i}}&&\(\times\)\\
+  Register Direct&01&\texttt{\(\text{R}_n\)}\\
+  Register Indirect&10&\texttt{(\(\text{R}_n\))}\\
+  Register Indirect with Offset&11&\texttt{(\(\text{R}_n\)+\textit{i})}\\
+  \bottomrule
+\end{tabular}
+
+\subsection*{Instruction Encoding}
+\encoding{1&0&0&0%
+&\multicolumn{2}{|c|}{dmode}%
+&\multicolumn{2}{|c|}{smode}
+&\multicolumn{4}{|c|}{destination}
+&\multicolumn{4}{|c|}{source}}\\\null\qquad
+\encoding{\multicolumn{16}{|c|}{optional source extension word}}\\
+\null\qquad\qquad
+\encoding{\multicolumn{16}{|c|}{optional destination extension word}}
+
+\subsection*{Flags}
+\begin{multicols}{2}\noindent
+  C: set if carry occurred\\
+  N: set if result is negative
+
+  \columnbreak\noindent
+  V: set if overflow occurred\\
+  Z: set if result is zero
+\end{multicols}
+
+
+\instruction[Stop Processor]{HALT}
+\subsection*{Operation}
+if Condition:\\\null\qquad
+\(\text{\texttt{PC}}\rightarrow\text{\texttt{PC}}\)
+
+\subsection*{Assembler Syntax}
+\texttt{halt[\textit{.condition}]}
+
+\subsection*{Description}
+If the specified condition is met,
+the program counter is unchanged
+and program execution cannot continue
+until an interrupt is received.
+Otherwise, execution proceeds to the next instruction.
+
+\subsection*{Instruction Encoding}
+\encoding{0&0&0&0&0&0&0&0&0&0&0&0&0&0&0&0}\\
+\null\qquad\encoding{0&0&0&0&0&0&0&0&0&0&0&0&0&0&0&0}
+
+\subsection*{Flags}
+\begin{multicols}{2}\noindent
+  C: unaffected\\
+  N: unaffected
+
+  \columnbreak\noindent
+  V: unaffected\\
+  Z: unaffected
+\end{multicols}
+
+\subsection*{Synthesis}
+\begin{quote}\asmstyle
+  \asmline{br}{@}
+\end{quote}
+
+
+\instruction[Logical Shift Right]{LSR}
+\subsection*{Operation}
+\(\text{Destination}\triangleright\text{Source}\rightarrow
+\text{Destination}\)
+
+\subsection*{Assembler Syntax}
+\texttt{lsr \textit{destination},\textit{source}}
+
+\subsection*{Description}
+Shift the destination register
+rightward the number of times indicated by the unsigned source operand
+and store the result in the destination register.
+The carry flag is set if any set bit is shifted out at any point.
+Zeros are shifted into newly open positions.
+
+\begin{figure}[htb]\centering
+  \begin{tikzpicture}[x=1.5in]
+    \node[draw] at (0,0) (Z) {0};
+    \node[draw,text width=2in,align=center] at (1,0) (S) {Source};
+    \node[draw] at (2,0) (C) {C};
+    \path[->,thick] (Z) edge (S) (S) edge (C);
+  \end{tikzpicture}
+  \caption{Logical Shift Right Operation}
+  \label{fig:lsr}
+\end{figure}
+
+\subsection*{Addressing Modes}
+\begin{tabular}{rcccc}
+  \toprule
+  Mode&&Syntax&Source&Destination\\
+  \midrule
+  Immediate&00&\texttt{\textit{i}}&\(\dagger\)&\(\times\)\\
+  Register Direct&01&\texttt{\(\text{R}_n\)}\\
+  Register Indirect&10&\texttt{(\(\text{R}_n\))}&\(\times\)&\(\times\)\\
+  Register Indirect with Offset&11&\texttt{(\(\text{R}_n\)+\textit{i})}
+  &\(\times\)&\(\times\)\\
+  \bottomrule
+\end{tabular}
+
+\noindent
+\(\dagger\) only short immediate data (1--15) is permitted.
+
+\subsection*{Instruction Encoding}
+\encoding{0&0&1&1%
+&0&0&1%
+&{i/r}
+&\multicolumn{4}{|c|}{destination}
+&\multicolumn{4}{|c|}{source}}
+
+\subsection*{Flags}
+\begin{multicols}{2}\noindent
+  C: set if any set bit is shifted out\\
+  N: set if result is negative
+
+  \columnbreak\noindent
+  V: always cleared\\
+  Z: set if result is zero
+\end{multicols}
+
+
+\instruction[Move]{MOV}
+\subsection*{Operation}
+\(\text{Source}\rightarrow\text{Destination}\)
+
+\subsection*{Assembler Syntax}
+\texttt{mov \textit{destination},\textit{source}}
+
+\subsection*{Description}
+Copy the source operand into the destination location.
+Note that in the reference implementation,
+this instruction performs a memory read
+on indirectly addressed destinations
+even though the result is ignored.
+This can be an issue if the location
+is memory-mapped \textsc{i/o}.
+
+\subsection*{Addressing Modes}
+\begin{tabular}{rcccc}
+  \toprule
+  Mode&&Syntax&Source&Destination\\
+  \midrule
+  Immediate&00&\texttt{\textit{i}}&&\(\times\)\\
+  Register Direct&01&\texttt{\(\text{R}_n\)}\\
+  Register Indirect&10&\texttt{(\(\text{R}_n\))}\\
+  Register Indirect with Offset&11&\texttt{(\(\text{R}_n\)+\textit{i})}\\
+  \bottomrule
+\end{tabular}
+
+\subsection*{Instruction Encoding}
+\encoding{1&1&0&0%
+&\multicolumn{2}{|c|}{dmode}%
+&\multicolumn{2}{|c|}{smode}
+&\multicolumn{4}{|c|}{destination}
+&\multicolumn{4}{|c|}{source}}\\\null\qquad
+\encoding{\multicolumn{16}{|c|}{optional source extension word}}\\
+\null\qquad\qquad
+\encoding{\multicolumn{16}{|c|}{optional destination extension word}}
+
+\subsection*{Flags}
+\begin{multicols}{2}\noindent
+  C: unaffected\\
+  N: unaffected
+
+  \columnbreak\noindent
+  V: unaffected\\
+  Z: unaffected
+\end{multicols}
+
+
+\instruction[Replace Status]{MOVSR}
+\subsection*{Operation}
+\(\text{\texttt{SR}}\rightarrow\text{Destination}\)\\
+if system mode:\\
+\null\qquad
+\(\text{Source}\rightarrow\text{\texttt{SR}}\)\\
+else:\\
+\null\qquad
+\(\text{Source}\rightarrow\text{\texttt{SR}}{:}0{:}3\)
+
+\subsection*{Assembler Syntax}
+\texttt{movsr \textit{destination},\textit{source}}
+
+\subsection*{Description}
+Store the content of the status register into the destination location.
+Additionally, copy the source operand into the status register.
+In system mode, the entire status register is written.
+In program mode, only the condition flags are modified.
+Note that these operations are simultaneous;
+if the source and destination refer to the same location,
+the original source is used.
+
+\subsection*{Addressing Modes}
+\begin{tabular}{rcccc}
+  \toprule
+  Mode&&Syntax&Source&Destination\\
+  \midrule
+  Immediate&00&\texttt{\textit{i}}&&\(\times\)\\
+  Register Direct&01&\texttt{\(\text{R}_n\)}\\
+  Register Indirect&10&\texttt{(\(\text{R}_n\))}&&\(\times\)\\
+  Register Indirect with Offset&11&\texttt{(\(\text{R}_n\)+\textit{i})}
+  &&\(\times\)\\
+  \bottomrule
+\end{tabular}
+
+\subsection*{Instruction Encoding}
+\encoding{0&0&1&0%
+&0&0%
+&\multicolumn{2}{|c|}{smode}
+&\multicolumn{4}{|c|}{destination}
+&\multicolumn{4}{|c|}{source}}\\\null\qquad
+\encoding{\multicolumn{16}{|c|}{optional source extension word}}
+
+\subsection*{Flags}
+\begin{multicols}{2}\noindent
+  C: set by operation\\
+  N: set by operation
+
+  \columnbreak\noindent
+  V: set by operation\\
+  Z: set by operation
+\end{multicols}
+
+
+\instruction[Two's-Complement Negate Register]{NEG}
+\subsection*{Operation}
+\(0-\text{Source}\rightarrow\text{Destination}\)
+
+\subsection*{Assembler Syntax}
+\texttt{neg \textit{destination}[,\textit{source}]}
+
+\subsection*{Description}
+Place the negation of the source register into the destination register.
+If the source is unspecified, the destination register is used instead.
+
+\subsection*{Addressing Modes}
+\begin{tabular}{rcccc}
+  \toprule
+  Mode&&Syntax&Source&Destination\\
+  \midrule
+  Immediate&00&\texttt{\textit{i}}&\(\times\)&\(\times\)\\
+  Register Direct&01&\texttt{\(\text{R}_n\)}\\
+  Register Indirect&10&\texttt{(\(\text{R}_n\))}&\(\times\)&\(\times\)\\
+  Register Indirect with Offset&11&\texttt{(\(\text{R}_n\)+\textit{i})}
+  &\(\times\)&\(\times\)\\
+  \bottomrule
+\end{tabular}
+
+\subsection*{Instruction Encoding}
+\encoding{0&0&1&1%
+&0&0
+&0&1
+&\multicolumn{4}{|c|}{destination}
+&\multicolumn{4}{|c|}{source}}
+
+\subsection*{Flags}
+\begin{multicols}{2}\noindent
+  C: set if result is nonzero\\
+  N: set if result is negative
+
+  \columnbreak\noindent
+  V: set if result is 0x8000\({}=-32768\)\\
+  Z: set if result is zero
+\end{multicols}
+
+
+\instruction[No Operation]{NOP}
+\subsection*{Operation}
+None
+
+\subsection*{Assembler Syntax}
+\texttt{nop}
+
+\subsection*{Description}
+Execution proceeds to the next instruction.
+
+\subsection*{Instruction Encoding}
+\encoding{0&0&0&0&0&0&0&0&0&0&0&0&0&0&0&1}
+
+\subsection*{Flags}
+\begin{multicols}{2}\noindent
+  C: unaffected\\
+  N: unaffected
+
+  \columnbreak\noindent
+  V: unaffected\\
+  Z: unaffected
+\end{multicols}
+
+\subsection*{Synthesis}
+\begin{quote}\asmstyle
+  \asmline{br}{@+1}
+\end{quote}
+
+
+\instruction[Bitwise Logical NOT]{NOT}
+\subsection*{Operation}
+\({\sim}\text{Destination}\rightarrow\text{Destination}\)
+
+\subsection*{Assembler Syntax}
+\texttt{not \textit{destination}}
+
+\subsection*{Description}
+Compute the bitwise logical NOT
+of the destination operand
+and store the result in the destination location.
+
+\subsection*{Addressing Modes}
+\begin{tabular}{rccc}
+  \toprule
+  Mode&&Syntax&Destination\\
+  \midrule
+  Immediate&00&\texttt{\textit{i}}&\(\times\)\\
+  Register Direct&01&\texttt{\(\text{R}_n\)}\\
+  Register Indirect&10&\texttt{(\(\text{R}_n\))}\\
+  Register Indirect with Offset&11&\texttt{(\(\text{R}_n\)+\textit{i})}\\
+  \bottomrule
+\end{tabular}
+
+\subsection*{Instruction Encoding}
+\encoding{1&0&1&1%
+&\multicolumn{2}{|c|}{dmode}%
+&0&0
+&\multicolumn{4}{|c|}{destination}
+&0&0&0&0}\\\null\qquad
+\encoding{1&1&1&1&1&1&1&1&1&1&1&1&1&1&1&1}\\
+\null\qquad\qquad
+\encoding{\multicolumn{16}{|c|}{optional destination extension word}}
+
+\subsection*{Flags}
+\begin{multicols}{2}\noindent
+  C: unaffected\\
+  N: set if result is negative
+
+  \columnbreak\noindent
+  V: unaffected\\
+  Z: set if result is zero
+\end{multicols}
+
+\subsection*{Synthesis}
+\begin{quote}\asmstyle
+  \asmline{xor}{\textit{destination},0xFFFF}
+\end{quote}
+
+
+\instruction[Bitwise Logical Inclusive-OR]{OR}
+\subsection*{Operation}
+\(\text{Destination}\vee\text{Source}\rightarrow\text{Destination}\)
+
+\subsection*{Assembler Syntax}
+\texttt{or \textit{destination},\textit{source}}
+
+\subsection*{Description}
+Compute the bitwise logical inclusive-OR
+of the source operand and destination operand
+and store the result in the destination location.
+
+\subsection*{Addressing Modes}
+\begin{tabular}{rcccc}
+  \toprule
+  Mode&&Syntax&Source&Destination\\
+  \midrule
+  Immediate&00&\texttt{\textit{i}}&&\(\times\)\\
+  Register Direct&01&\texttt{\(\text{R}_n\)}\\
+  Register Indirect&10&\texttt{(\(\text{R}_n\))}\\
+  Register Indirect with Offset&11&\texttt{(\(\text{R}_n\)+\textit{i})}\\
+  \bottomrule
+\end{tabular}
+
+\subsection*{Instruction Encoding}
+\encoding{1&0&0&1%
+&\multicolumn{2}{|c|}{dmode}%
+&\multicolumn{2}{|c|}{smode}
+&\multicolumn{4}{|c|}{destination}
+&\multicolumn{4}{|c|}{source}}\\\null\qquad
+\encoding{\multicolumn{16}{|c|}{optional source extension word}}\\
+\null\qquad\qquad
+\encoding{\multicolumn{16}{|c|}{optional destination extension word}}
+
+\subsection*{Flags}
+\begin{multicols}{2}\noindent
+  C: unaffected\\
+  N: set if result is negative
+
+  \columnbreak\noindent
+  V: unaffected\\
+  Z: set if result is zero
+\end{multicols}
+
+
+\instruction[Logical Inclusive-OR into Status]{ORSR}
+\subsection*{Operation}
+\(\text{\texttt{SR}}\rightarrow\text{Destination}\)\\
+if system mode:\\
+\null\qquad
+\(\text{\texttt{SR}}\vee\text{Source}\rightarrow\text{\texttt{SR}}\)\\
+else:\\
+\null\qquad
+\(\text{\texttt{SR}}\vee\text{Source}\rightarrow
+\text{\texttt{SR}}{:}0{:}3\)
+
+\subsection*{Assembler Syntax}
+\texttt{orsr \textit{destination},\textit{source}}
+
+\subsection*{Description}
+Store the content of the status register into the destination location.
+Additionally, compute the bitwise logical inclusive-OR
+of the source operand and status register
+and store the result back into the status register.
+In system mode, the entire status register is written.
+In program mode, only the condition flags are modified.
+Note that these operations are simultaneous;
+if the source and destination refer to the same location,
+the original source is used.
+
+\subsection*{Addressing Modes}
+\begin{tabular}{rcccc}
+  \toprule
+  Mode&&Syntax&Source&Destination\\
+  \midrule
+  Immediate&00&\texttt{\textit{i}}&&\(\times\)\\
+  Register Direct&01&\texttt{\(\text{R}_n\)}\\
+  Register Indirect&10&\texttt{(\(\text{R}_n\))}&&\(\times\)\\
+  Register Indirect with Offset&11&\texttt{(\(\text{R}_n\)+\textit{i})}
+  &&\(\times\)\\
+  \bottomrule
+\end{tabular}
+
+\subsection*{Instruction Encoding}
+\encoding{0&0&1&0%
+&0&1%
+&\multicolumn{2}{|c|}{smode}
+&\multicolumn{4}{|c|}{destination}
+&\multicolumn{4}{|c|}{source}}\\\null\qquad
+\encoding{\multicolumn{16}{|c|}{optional source extension word}}
+
+\subsection*{Flags}
+\begin{multicols}{2}\noindent
+  C: set by operation\\
+  N: set by operation
+
+  \columnbreak\noindent
+  V: set by operation\\
+  Z: set by operation
+\end{multicols}
+
+
+\instruction[Pop from Stack]{POP}
+\subsection*{Operation}
+\((\text{\texttt{SP}}+)\rightarrow\text{Destination}\)
+
+\subsection*{Assembler Syntax}
+\texttt{pop \textit{destination}}
+
+\subsection*{Description}
+Copy the contents of the memory location
+addressed by the postincremented stack pointer
+into the destination register.
+
+\subsection*{Addressing Modes}
+\begin{tabular}{rcccc}
+  \toprule
+  Mode&&Syntax&Destination\\
+  \midrule
+  Immediate&00&\texttt{\textit{i}}&\(\times\)\\
+  Register Direct&01&\texttt{\(\text{R}_n\)}\\
+  Register Indirect&10&\texttt{(\(\text{R}_n\))}&\(\times\)\\
+  Register Indirect with Offset&11&\texttt{(\(\text{R}_n\)+\textit{i})}
+  &\(\times\)\\
+  \bottomrule
+\end{tabular}
+
+\subsection*{Instruction Encoding}
+\encoding{0&0&0&1%
+&0&1%
+&0&1%
+&\multicolumn{4}{|c|}{destination}
+&0&0&0&0}
+
+\subsection*{Flags}
+\begin{multicols}{2}\noindent
+  C: unaffected\\
+  N: unaffected
+
+  \columnbreak\noindent
+  V: unaffected\\
+  Z: unaffected
+\end{multicols}
+
+
+\instruction[Read Program Stack Pointer]{PSPR}
+\subsection*{Operation}
+\(\text{\texttt{PSP}}\rightarrow\text{Destination}\)
+
+\subsection*{Assembler Syntax}
+\texttt{pspr \textit{destination}}
+
+\subsection*{Description}
+Copy the contents of program stack pointer register
+into the destination register.
+
+\subsection*{Addressing Modes}
+\begin{tabular}{rcccc}
+  \toprule
+  Mode&&Syntax&Destination\\
+  \midrule
+  Immediate&00&\texttt{\textit{i}}&\(\times\)\\
+  Register Direct&01&\texttt{\(\text{R}_n\)}\\
+  Register Indirect&10&\texttt{(\(\text{R}_n\))}&\(\times\)\\
+  Register Indirect with Offset&11&\texttt{(\(\text{R}_n\)+\textit{i})}
+  &\(\times\)\\
+  \bottomrule
+\end{tabular}
+
+\subsection*{Instruction Encoding}
+\encoding{0&0&0&1%
+&1&0%
+&1&0%
+&\multicolumn{4}{|c|}{destination}
+&0&0&0&0}
+
+\subsection*{Flags}
+\begin{multicols}{2}\noindent
+  C: unaffected\\
+  N: unaffected
+
+  \columnbreak\noindent
+  V: unaffected\\
+  Z: unaffected
+\end{multicols}
+
+
+\instruction[Read and Set Program Stack Pointer]{PSPRW}
+\subsection*{Operation}
+\(\text{\texttt{PSP}}\rightarrow\text{Destination}\)\\
+\(\text{Source}\rightarrow\text{\texttt{PSP}}\)
+
+\subsection*{Assembler Syntax}
+\texttt{psprw \textit{destination},\textit{source}}
+
+\subsection*{Description}
+Copy the contents of the source register
+and the current program stack pointer register
+into the program stack pointer register
+and destination register, respectively.
+Note that the copies are simultaneous;
+the destination register receives the original program stack pointer
+and the program stack pointer receives the original source register,
+even if the source and destination are the same.
+
+\subsection*{Addressing Modes}
+\begin{tabular}{rcccc}
+  \toprule
+  Mode&&Syntax&Source&Destination\\
+  \midrule
+  Immediate&00&\texttt{\textit{i}}&\(\times\)&\(\times\)\\
+  Register Direct&01&\texttt{\(\text{R}_n\)}\\
+  Register Indirect&10&\texttt{(\(\text{R}_n\))}&\(\times\)&\(\times\)\\
+  Register Indirect with Offset&11&\texttt{(\(\text{R}_n\)+\textit{i})}
+  &\(\times\)&\(\times\)\\
+  \bottomrule
+\end{tabular}
+
+\subsection*{Instruction Encoding}
+\encoding{0&0&0&1%
+&1&0%
+&1&1%
+&\multicolumn{4}{|c|}{destination}
+&\multicolumn{4}{|c|}{source}}
+
+\subsection*{Flags}
+\begin{multicols}{2}\noindent
+  C: unaffected\\
+  N: unaffected
+
+  \columnbreak\noindent
+  V: unaffected\\
+  Z: unaffected
+\end{multicols}
+
+
+\instruction[Set Program Stack Pointer]{PSPW}
+\subsection*{Operation}
+\(\text{Source}\rightarrow\text{\texttt{PSP}}\)
+
+\subsection*{Assembler Syntax}
+\texttt{pspw \textit{source}}
+
+\subsection*{Description}
+Copy the contents of the source register
+into the program stack pointer register.
+
+\subsection*{Addressing Modes}
+\begin{tabular}{rcccc}
+  \toprule
+  Mode&&Syntax&Source\\
+  \midrule
+  Immediate&00&\texttt{\textit{i}}&\(\times\)\\
+  Register Direct&01&\texttt{\(\text{R}_n\)}\\
+  Register Indirect&10&\texttt{(\(\text{R}_n\))}&\(\times\)\\
+  Register Indirect with Offset&11&\texttt{(\(\text{R}_n\)+\textit{i})}
+  &\(\times\)\\
+  \bottomrule
+\end{tabular}
+
+\subsection*{Instruction Encoding}
+\encoding{0&0&0&1%
+&1&0%
+&0&1%
+&0&0&0&0
+&\multicolumn{4}{|c|}{source}}
+
+\subsection*{Flags}
+\begin{multicols}{2}\noindent
+  C: unaffected\\
+  N: unaffected
+
+  \columnbreak\noindent
+  V: unaffected\\
+  Z: unaffected
+\end{multicols}
+
+
+\instruction[Push to Stack]{PUSH}
+\subsection*{Operation}
+\(\text{Source}\rightarrow(-\text{\texttt{SP}})\)
+
+\subsection*{Assembler Syntax}
+\texttt{push \textit{source}}
+
+\subsection*{Description}
+Copy the contents of the source register
+into the memory location
+addressed by the predecremented stack pointer.
+
+\subsection*{Addressing Modes}
+\begin{tabular}{rcccc}
+  \toprule
+  Mode&&Syntax&Source\\
+  \midrule
+  Immediate&00&\texttt{\textit{i}}&\(\times\)\\
+  Register Direct&01&\texttt{\(\text{R}_n\)}\\
+  Register Indirect&10&\texttt{(\(\text{R}_n\))}&\(\times\)\\
+  Register Indirect with Offset&11&\texttt{(\(\text{R}_n\)+\textit{i})}
+  &\(\times\)\\
+  \bottomrule
+\end{tabular}
+
+\subsection*{Instruction Encoding}
+\encoding{0&0&0&1%
+&0&0%
+&0&1%
+&0&0&0&0
+&\multicolumn{4}{|c|}{source}}
+
+\subsection*{Flags}
+\begin{multicols}{2}\noindent
+  C: unaffected\\
+  N: unaffected
+
+  \columnbreak\noindent
+  V: unaffected\\
+  Z: unaffected
+\end{multicols}
+
+
+\instruction[Return from Subroutine]{RET}
+\subsection*{Operation}
+if Condition:\\\null\qquad
+\((\text{\texttt{SP}}+)\rightarrow\text{\texttt{PC}}\)
+
+\subsection*{Assembler Syntax}
+\texttt{ret[\textit{.condition}]}
+
+\subsection*{Description}
+If the specified condition is met,
+program execution continues from an address popped from the stack.
+Otherwise, execution proceeds to the next instruction.
+
+\subsection*{Instruction Encoding}
+\encoding{0&0&0&0&1&1&0&1&\multicolumn{4}{c|}{condition}&0&0&0&0}
+
+\subsection*{Flags}
+\begin{multicols}{2}\noindent
+  C: unaffected\\
+  N: unaffected
+
+  \columnbreak\noindent
+  V: unaffected\\
+  Z: unaffected
+\end{multicols}
+
+
+\instruction[Rotate Left Through Carry]{RLC}
+\subsection*{Operation}
+\([\text{\texttt{SR}}{:}3~\text{Destination}]
+\circlearrowleft\text{Source}
+\rightarrow\text{Destination}\)
+
+\subsection*{Assembler Syntax}
+\texttt{rlc \textit{destination},\textit{source}}
+
+\subsection*{Description}
+Rotate the destination register
+leftward through the carry flag
+the number of times indicated by the unsigned source operand
+and store the result in the destination register.
+
+\begin{figure}[htb]\centering
+  \begin{tikzpicture}[x=1.5in]
+    \node[draw] at (0,0) (C) {C};
+    \node[draw,text width=2in,align=center] at (1,0) (S) {Source};
+    \path[->,thick]
+    (S) edge (C)
+    (C.west) edge[out=210,in=-30] (S.east);
+  \end{tikzpicture}
+  \caption{Rotate Left Through Carry Operation}
+  \label{fig:rlc}
+\end{figure}
+
+\subsection*{Addressing Modes}
+\begin{tabular}{rcccc}
+  \toprule
+  Mode&&Syntax&Source&Destination\\
+  \midrule
+  Immediate&00&\texttt{\textit{i}}&\(\dagger\)&\(\times\)\\
+  Register Direct&01&\texttt{\(\text{R}_n\)}\\
+  Register Indirect&10&\texttt{(\(\text{R}_n\))}&\(\times\)&\(\times\)\\
+  Register Indirect with Offset&11&\texttt{(\(\text{R}_n\)+\textit{i})}
+  &\(\times\)&\(\times\)\\
+  \bottomrule
+\end{tabular}
+
+\noindent
+\(\dagger\) only short immediate data (1--15) is permitted.
+
+\subsection*{Instruction Encoding}
+\encoding{0&0&1&1%
+&1&1&0%
+&{i/r}
+&\multicolumn{4}{|c|}{destination}
+&\multicolumn{4}{|c|}{source}}
+
+\subsection*{Flags}
+\begin{multicols}{2}\noindent
+  C: set by operation\\
+  N: set if result is negative
+
+  \columnbreak\noindent
+  V: always cleared\\
+  Z: set if result is zero
+\end{multicols}
+
+
+\instruction[Rotate Left]{ROL}
+\subsection*{Operation}
+\(\text{Destination}\circlearrowleft\text{Source}
+\rightarrow\text{Destination}\)
+
+\subsection*{Assembler Syntax}
+\texttt{rol \textit{destination},\textit{source}}
+
+\subsection*{Description}
+Rotate the destination register
+leftward the number of times indicated by the unsigned source operand
+and store the result in the destination register.
+
+\begin{figure}[htb]\centering
+  \begin{tikzpicture}[x=1.5in]
+    \node[draw,text width=2in,align=center] at (0,0) (S) {Source};
+    \path[->,thick]
+    (S.west) edge[out=210,in=-30] (S.east);
+  \end{tikzpicture}
+  \caption{Rotate Left Operation}
+  \label{fig:rol}
+\end{figure}
+
+\subsection*{Addressing Modes}
+\begin{tabular}{rcccc}
+  \toprule
+  Mode&&Syntax&Source&Destination\\
+  \midrule
+  Immediate&00&\texttt{\textit{i}}&\(\dagger\)&\(\times\)\\
+  Register Direct&01&\texttt{\(\text{R}_n\)}\\
+  Register Indirect&10&\texttt{(\(\text{R}_n\))}&\(\times\)&\(\times\)\\
+  Register Indirect with Offset&11&\texttt{(\(\text{R}_n\)+\textit{i})}
+  &\(\times\)&\(\times\)\\
+  \bottomrule
+\end{tabular}
+
+\noindent
+\(\dagger\) only short immediate data (1--15) is permitted.
+
+\subsection*{Instruction Encoding}
+\encoding{0&0&1&1%
+&1&0&0%
+&{i/r}
+&\multicolumn{4}{|c|}{destination}
+&\multicolumn{4}{|c|}{source}}
+
+\subsection*{Flags}
+\begin{multicols}{2}\noindent
+  C: always cleared\\
+  N: set if result is negative
+
+  \columnbreak\noindent
+  V: always cleared\\
+  Z: set if result is zero
+\end{multicols}
+
+
+\instruction[Rotate Right]{ROR}
+\subsection*{Operation}
+\(\text{Destination}\circlearrowright\text{Source}
+\rightarrow\text{Destination}\)
+
+\subsection*{Assembler Syntax}
+\texttt{ror \textit{destination},\textit{source}}
+
+\subsection*{Description}
+Rotate the destination register
+rightward the number of times indicated by the unsigned source operand
+and store the result in the destination register.
+
+\begin{figure}[htb]\centering
+  \begin{tikzpicture}[x=1.5in]
+    \node[draw,text width=2in,align=center] at (0,0) (S) {Source};
+    \path[->,thick]
+    (S.east) edge[out=-30,in=210] (S.west);
+  \end{tikzpicture}
+  \caption{Rotate Right Operation}
+  \label{fig:ror}
+\end{figure}
+
+\subsection*{Addressing Modes}
+\begin{tabular}{rcccc}
+  \toprule
+  Mode&&Syntax&Source&Destination\\
+  \midrule
+  Immediate&00&\texttt{\textit{i}}&\(\dagger\)&\(\times\)\\
+  Register Direct&01&\texttt{\(\text{R}_n\)}\\
+  Register Indirect&10&\texttt{(\(\text{R}_n\))}&\(\times\)&\(\times\)\\
+  Register Indirect with Offset&11&\texttt{(\(\text{R}_n\)+\textit{i})}
+  &\(\times\)&\(\times\)\\
+  \bottomrule
+\end{tabular}
+
+\noindent
+\(\dagger\) only short immediate data (1--15) is permitted.
+
+\subsection*{Instruction Encoding}
+\encoding{0&0&1&1%
+&1&0&1%
+&{i/r}
+&\multicolumn{4}{|c|}{destination}
+&\multicolumn{4}{|c|}{source}}
+
+\subsection*{Flags}
+\begin{multicols}{2}\noindent
+  C: always cleared\\
+  N: set if result is negative
+
+  \columnbreak\noindent
+  V: always cleared\\
+  Z: set if result is zero
+\end{multicols}
+
+
+\instruction[Rotate RRC Through Carry]{RRC}
+\subsection*{Operation}
+\([\text{\texttt{SR}}{:}3~\text{Destination}]
+\circlearrowright\text{Source}
+\rightarrow\text{Destination}\)
+
+\subsection*{Assembler Syntax}
+\texttt{rrc \textit{destination},\textit{source}}
+
+\subsection*{Description}
+Rotate the destination register
+rightward through the carry flag
+the number of times indicated by the unsigned source operand
+and store the result in the destination register.
+
+\begin{figure}[htb]\centering
+  \begin{tikzpicture}[x=1.5in]
+    \node[draw] at (0,0) (C) {C};
+    \node[draw,text width=2in,align=center] at (1,0) (S) {Source};
+    \path[->,thick]
+    (C) edge (S)
+    (S.east) edge[in=210,out=-30] (C.west);
+  \end{tikzpicture}
+  \caption{Rotate Right Through Carry Operation}
+  \label{fig:rrc}
+\end{figure}
+
+\subsection*{Addressing Modes}
+\begin{tabular}{rcccc}
+  \toprule
+  Mode&&Syntax&Source&Destination\\
+  \midrule
+  Immediate&00&\texttt{\textit{i}}&\(\dagger\)&\(\times\)\\
+  Register Direct&01&\texttt{\(\text{R}_n\)}\\
+  Register Indirect&10&\texttt{(\(\text{R}_n\))}&\(\times\)&\(\times\)\\
+  Register Indirect with Offset&11&\texttt{(\(\text{R}_n\)+\textit{i})}
+  &\(\times\)&\(\times\)\\
+  \bottomrule
+\end{tabular}
+
+\noindent
+\(\dagger\) only short immediate data (1--15) is permitted.
+
+\subsection*{Instruction Encoding}
+\encoding{0&0&1&1%
+&1&1&1%
+&{i/r}
+&\multicolumn{4}{|c|}{destination}
+&\multicolumn{4}{|c|}{source}}
+
+\subsection*{Flags}
+\begin{multicols}{2}\noindent
+  C: set by operation\\
+  N: set if result is negative
+
+  \columnbreak\noindent
+  V: always cleared\\
+  Z: set if result is zero
+\end{multicols}
+
+
+\instruction[Return to Program]{RTP}
+\subsection*{Operation}
+if system mode and Condition:
+\\\null\qquad if interrupt nesting level is zero:
+\\\null\qquad\qquad\(0\rightarrow\text{\texttt{SR}}{:}15\)
+\\\null\qquad
+\(\text{\texttt{SR}}{:}8{:}11-1\rightarrow\text{\texttt{SR}}{:}8{:}11\)
+\\\null\qquad
+\((\text{\texttt{SSP}}+)\rightarrow\text{\texttt{PC}}\)\\
+else if program mode and Condition:
+\\\null\qquad
+\((\text{\texttt{PSP}}+)\rightarrow\text{\texttt{PC}}\)
+
+\subsection*{Assembler Syntax}
+\texttt{rtp[\textit{.condition}]}
+
+\subsection*{Description}
+In program mode, this instruction behaves
+in a manner identical to \texttt{RET}.
+In system mode, it is more involved.
+If the specified condition is not met,
+execution proceeds to the next instruction.
+If, on the other hand, the condition is met,
+then the current interrupt nesting level is decreased by one.
+Program execution continues from an address popped
+from the system stack.
+If the nesting level was originally zero,
+then the processor will exit system mode
+and resume operation in program mode.
+
+\subsection*{Instruction Encoding}
+\encoding{0&0&0&0&1&1&0&1&\multicolumn{4}{c|}{condition}&1&1&1&1}
+
+\subsection*{Flags}
+\begin{multicols}{2}\noindent
+  C: unaffected\\
+  N: unaffected
+
+  \columnbreak\noindent
+  V: unaffected\\
+  Z: unaffected
+\end{multicols}
+
+
+\instruction[Subtract]{SUB}
+\subsection*{Operation}
+\(\text{Destination}-\text{Source}\rightarrow\text{Destination}\)
+
+\subsection*{Assembler Syntax}
+\texttt{sub \textit{destination},\textit{source}}
+
+\subsection*{Description}
+Subtract the source operand from the destination operand
+and store the result in the destination location.
+
+\subsection*{Addressing Modes}
+\begin{tabular}{rcccc}
+  \toprule
+  Mode&&Syntax&Source&Destination\\
+  \midrule
+  Immediate&00&\texttt{\textit{i}}&&\(\times\)\\
+  Register Direct&01&\texttt{\(\text{R}_n\)}\\
+  Register Indirect&10&\texttt{(\(\text{R}_n\))}\\
+  Register Indirect with Offset&11&\texttt{(\(\text{R}_n\)+\textit{i})}\\
+  \bottomrule
+\end{tabular}
+
+\subsection*{Instruction Encoding}
+\encoding{0&1&0&0%
+&\multicolumn{2}{|c|}{dmode}%
+&\multicolumn{2}{|c|}{smode}
+&\multicolumn{4}{|c|}{destination}
+&\multicolumn{4}{|c|}{source}}\\\null\qquad
+\encoding{\multicolumn{16}{|c|}{optional source extension word}}\\
+\null\qquad\qquad
+\encoding{\multicolumn{16}{|c|}{optional destination extension word}}
+
+\subsection*{Flags}
+\begin{multicols}{2}\noindent
+  C: set if borrow occurred\\
+  N: set if result is negative
+
+  \columnbreak\noindent
+  V: set if overflow occurred\\
+  Z: set if result is zero
+\end{multicols}
+
+
+\instruction[Subtract with Borrow]{SUBB}
+\subsection*{Operation}
+\(\text{Destination}-\text{Source}-\text{\texttt{SR}}{:}3
+\rightarrow\text{Destination}\)
+
+\subsection*{Assembler Syntax}
+\texttt{subb \textit{destination},\textit{source}}
+
+\subsection*{Description}
+Subtract the source operand and the carry bit
+(treated as a borrow bit)
+from the destination operand
+and store the result in the destination location.
+
+\subsection*{Addressing Modes}
+\begin{tabular}{rcccc}
+  \toprule
+  Mode&&Syntax&Source&Destination\\
+  \midrule
+  Immediate&00&\texttt{\textit{i}}&&\(\times\)\\
+  Register Direct&01&\texttt{\(\text{R}_n\)}\\
+  Register Indirect&10&\texttt{(\(\text{R}_n\))}\\
+  Register Indirect with Offset&11&\texttt{(\(\text{R}_n\)+\textit{i})}\\
+  \bottomrule
+\end{tabular}
+
+\subsection*{Instruction Encoding}
+\encoding{0&1&0&1%
+&\multicolumn{2}{|c|}{dmode}%
+&\multicolumn{2}{|c|}{smode}
+&\multicolumn{4}{|c|}{destination}
+&\multicolumn{4}{|c|}{source}}\\\null\qquad
+\encoding{\multicolumn{16}{|c|}{optional source extension word}}\\
+\null\qquad\qquad
+\encoding{\multicolumn{16}{|c|}{optional destination extension word}}
+
+\subsection*{Flags}
+\begin{multicols}{2}\noindent
+  C: set if borrow occurred\\
+  N: set if result is negative
+
+  \columnbreak\noindent
+  V: set if overflow occurred\\
+  Z: set if result is zero
+\end{multicols}
+
+
+\instruction[Software Interrupt]{TRAP}
+\subsection*{Operation}
+if Condition:
+\\\null\qquad\(1\rightarrow\text{\texttt{SR}}{:}15\)
+\\\null\qquad
+\(\text{\texttt{SR}}{:}8{:}11+1\rightarrow\text{\texttt{SR}}{:}8{:}11\)
+\\\null\qquad
+\(\text{\texttt{PC}}+1\rightarrow(-\text{\texttt{SSP}}+)\)
+\\\null\qquad
+\(240+\text{N}+\text{N}\rightarrow\text{\texttt{PC}}\)
+
+\subsection*{Assembler Syntax}
+\texttt{trap[\textit{.condition}] \textit{n}}
+
+\subsection*{Description}
+If the specified condition is not met,
+then execution proceeds to the next instruction.
+If, however, the condition is met,
+the processor enters system mode
+and the interrupt nesting level is increased by one.
+The location of the next instruction is pushed to the system stack,
+and program execution continues from
+the location associated with the requested interrupt,
+\(240+\text{N}+\text{N}\).
+
+\subsection*{Instruction Encoding}
+\encoding{1&1&0&1&0&1&0&1&\multicolumn{4}{c|}{condition}
+&\multicolumn{3}{c|}{n}&0}
+
+\subsection*{Flags}
+\begin{multicols}{2}\noindent
+  C: unaffected\\
+  N: unaffected
+
+  \columnbreak\noindent
+  V: unaffected\\
+  Z: unaffected
+\end{multicols}
+
+
+\instruction[Bitwise Logical Exclusive-OR]{XOR}
+\subsection*{Operation}
+\(\text{Destination}\oplus\text{Source}\rightarrow\text{Destination}\)
+
+\subsection*{Assembler Syntax}
+\texttt{xor \textit{destination},\textit{source}}
+
+\subsection*{Description}
+Compute the bitwise logical exclusive-OR
+of the source operand and destination operand
+and store the result in the destination location.
+
+\subsection*{Addressing Modes}
+\begin{tabular}{rcccc}
+  \toprule
+  Mode&&Syntax&Source&Destination\\
+  \midrule
+  Immediate&00&\texttt{\textit{i}}&&\(\times\)\\
+  Register Direct&01&\texttt{\(\text{R}_n\)}\\
+  Register Indirect&10&\texttt{(\(\text{R}_n\))}\\
+  Register Indirect with Offset&11&\texttt{(\(\text{R}_n\)+\textit{i})}\\
+  \bottomrule
+\end{tabular}
+
+\subsection*{Instruction Encoding}
+\encoding{1&0&1&1%
+&\multicolumn{2}{|c|}{dmode}%
+&\multicolumn{2}{|c|}{smode}
+&\multicolumn{4}{|c|}{destination}
+&\multicolumn{4}{|c|}{source}}\\\null\qquad
+\encoding{\multicolumn{16}{|c|}{optional source extension word}}\\
+\null\qquad\qquad
+\encoding{\multicolumn{16}{|c|}{optional destination extension word}}
+
+\subsection*{Flags}
+\begin{multicols}{2}\noindent
+  C: unaffected\\
+  N: set if result is negative
+
+  \columnbreak\noindent
+  V: unaffected\\
+  Z: set if result is zero
+\end{multicols}
+
+
+\instruction[Logical Exclusive-OR into Status]{XORSR}
+\subsection*{Operation}
+\(\text{\texttt{SR}}\rightarrow\text{Destination}\)\\
+if system mode:\\
+\null\qquad
+\(\text{\texttt{SR}}\oplus\text{Source}\rightarrow\text{\texttt{SR}}\)\\
+else:\\
+\null\qquad
+\(\text{\texttt{SR}}\oplus\text{Source}\rightarrow
+\text{\texttt{SR}}{:}0{:}3\)
+
+\subsection*{Assembler Syntax}
+\texttt{xorsr \textit{destination},\textit{source}}
+
+\subsection*{Description}
+Store the content of the status register into the destination location.
+Additionally, compute the bitwise logical exclusive-OR
+of the source operand and status register
+and store the result back into the status register.
+In system mode, the entire status register is written.
+In program mode, only the condition flags are modified.
+Note that these operations are simultaneous;
+if the source and destination refer to the same location,
+the original source is used.
+
+\subsection*{Addressing Modes}
+\begin{tabular}{rcccc}
+  \toprule
+  Mode&&Syntax&Source&Destination\\
+  \midrule
+  Immediate&00&\texttt{\textit{i}}&&\(\times\)\\
+  Register Direct&01&\texttt{\(\text{R}_n\)}\\
+  Register Indirect&10&\texttt{(\(\text{R}_n\))}&&\(\times\)\\
+  Register Indirect with Offset&11&\texttt{(\(\text{R}_n\)+\textit{i})}
+  &&\(\times\)\\
+  \bottomrule
+\end{tabular}
+
+\subsection*{Instruction Encoding}
+\encoding{0&0&1&0%
+&1&1%
+&\multicolumn{2}{|c|}{smode}
+&\multicolumn{4}{|c|}{destination}
+&\multicolumn{4}{|c|}{source}}\\\null\qquad
+\encoding{\multicolumn{16}{|c|}{optional source extension word}}
+
+\subsection*{Flags}
+\begin{multicols}{2}\noindent
+  C: set by operation\\
+  N: set by operation
+
+  \columnbreak\noindent
+  V: set by operation\\
+  Z: set by operation
+\end{multicols}
+\clearpage
+\section*{Instruction Set in Numerical Order}
+\begin{center}
+\begin{tabular}{lcl}
+  \toprule
+  Encoding&&Instruction\\\midrule
+%
+  \texttt{0\textit{m}\textit{c}\textit{s}},
+  \(\text{\texttt{0}}\leq\text{\texttt{\textit{m}}}
+  \leq\text{\texttt{3}}\)
+  &\texttt{BR}&Branch Relative\\
+%
+  \texttt{0\textit{m}\textit{c}\textit{s}},
+  \(\text{\texttt{4}}\leq\text{\texttt{\textit{m}}}
+  \leq\text{\texttt{7}}\)
+  &\texttt{BA}&Branch Absolute\\
+%
+  \texttt{0\textit{m}\textit{c}\textit{s}},
+  \(\text{\texttt{8}}\leq\text{\texttt{\textit{m}}}
+  \leq\text{\texttt{C}}\)
+  &\texttt{CALL}&Branch to Subroutine\\
+%
+  \texttt{0D\textit{c}0}&\texttt{RET}&Return from Subroutine\\
+%
+  \texttt{0D\textit{c}F}&\texttt{RTP}&Return to Program\\
+%
+  \texttt{110\textit{s}}&\texttt{PUSH}&Push to Stack\\
+%
+  \texttt{15\textit{d}0}&\texttt{POP}&Pop from Stack\\
+%
+  \texttt{190\textit{s}}&\texttt{PSPW}&Set Program Stack Pointer\\
+%
+  \texttt{1A\textit{d}0}&\texttt{PSPR}&Read Program Stack Pointer\\
+%
+  \texttt{1B\textit{d}\textit{s}}&\texttt{PSPRW}
+  &Read and Set Program Stack Pointer\\
+%
+  \texttt{2\textit{m}\textit{d}\textit{s}},
+  \(\text{\texttt{0}}\leq\text{\texttt{\textit{m}}}
+  \leq\text{\texttt{3}}\)
+  &\texttt{MOVSR}&Replace Status\\
+%
+  \texttt{2\textit{m}\textit{d}\textit{s}},
+  \(\text{\texttt{4}}\leq\text{\texttt{\textit{m}}}
+  \leq\text{\texttt{7}}\)
+  &\texttt{ORSR}&Logical Inclusive-OR into Status\\
+%
+  \texttt{2\textit{m}\textit{d}\textit{s}},
+  \(\text{\texttt{8}}\leq\text{\texttt{\textit{m}}}
+  \leq\text{\texttt{B}}\)
+  &\texttt{ANDSR}&Logical AND into Status\\
+%
+  \texttt{2\textit{m}\textit{d}\textit{s}},
+  \(\text{\texttt{C}}\leq\text{\texttt{\textit{m}}}
+  \leq\text{\texttt{F}}\)
+  &\texttt{XORSR}&Logical Exclusive-OR into Status\\
+%
+  \texttt{31\textit{d}\textit{s}}&\texttt{NEG}
+  &Two's-Complement Negate Register\\
+%
+  \texttt{3\textit{m}\textit{d}\textit{s}},
+  \(\text{\texttt{2}}\leq\text{\texttt{\textit{m}}}
+  \leq\text{\texttt{3}}\)
+  &\texttt{LSR}&Logical Shift Right\\
+%
+  \texttt{3\textit{m}\textit{d}\textit{s}},
+  \(\text{\texttt{4}}\leq\text{\texttt{\textit{m}}}
+  \leq\text{\texttt{5}}\)
+  &\texttt{ASL}&Arithmetic Shift Left\\
+%
+  \texttt{3\textit{m}\textit{d}\textit{s}},
+  \(\text{\texttt{6}}\leq\text{\texttt{\textit{m}}}
+  \leq\text{\texttt{7}}\)
+  &\texttt{ASR}&Arithmetic Shift Right\\
+%
+  \texttt{3\textit{m}\textit{d}\textit{s}},
+  \(\text{\texttt{8}}\leq\text{\texttt{\textit{m}}}
+  \leq\text{\texttt{9}}\)
+  &\texttt{ROL}&Rotate Left\\
+%
+  \texttt{3\textit{m}\textit{d}\textit{s}},
+  \(\text{\texttt{A}}\leq\text{\texttt{\textit{m}}}
+  \leq\text{\texttt{B}}\)
+  &\texttt{ROR}&Rotate Right\\
+%
+  \texttt{3\textit{m}\textit{d}\textit{s}},
+  \(\text{\texttt{C}}\leq\text{\texttt{\textit{m}}}
+  \leq\text{\texttt{D}}\)
+  &\texttt{RLC}&Rotate Left Through Carry\\
+%
+  \texttt{3\textit{m}\textit{d}\textit{s}},
+  \(\text{\texttt{E}}\leq\text{\texttt{\textit{m}}}
+  \leq\text{\texttt{F}}\)
+  &\texttt{RRC}&Rotate Right Through Carry\\
+%
+  \texttt{4\textit{m}\textit{d}\textit{s}}&\texttt{SUB}&Subtract\\
+%
+  \texttt{5\textit{m}\textit{d}\textit{s}}&\texttt{SUBB}
+  &Subtract with Borrow\\
+%
+  \texttt{6\textit{m}\textit{d}\textit{s}}&\texttt{ADD}&Add\\
+%
+  \texttt{7\textit{m}\textit{d}\textit{s}}&\texttt{ADDC}
+  &Add with Carry\\
+%
+  \texttt{8\textit{m}\textit{d}\textit{s}}&\texttt{CMP}&Compare\\
+%
+  \texttt{9\textit{m}\textit{d}\textit{s}}&\texttt{OR}
+  &Bitwise Logical Inclusive-OR\\
+%
+  \texttt{A\textit{m}\textit{d}\textit{s}}&\texttt{AND}
+  &Bitwise Logical AND\\
+%
+  \texttt{B\textit{m}\textit{d}\textit{s}}&\texttt{XOR}
+  &Bitwise Logical Exclusive-OR\\
+%
+  \texttt{C\textit{m}\textit{d}\textit{s}}&\texttt{MOV}
+  &Move\\
+%
+  \texttt{D5\textit{c}\textit{v}}&\texttt{TRAP}
+  &Software Interrupt\\
+%
+  \texttt{E\textit{x}\textit{y}\textit{z}}&
+  &\textit{Reserved for extensions}\\
+%
+  \texttt{F\textit{x}\textit{y}\textit{z}}&
+  &\textit{Reserved for extensions}\\
+  \bottomrule
+\end{tabular}
+\end{center}
+\begin{itemize}[noitemsep,topsep=0pt]
+\item \texttt{\textit{c}}: Condition
+\item \texttt{\textit{d}}: Destination
+\item \texttt{\textit{m}}: Mode
+\item \texttt{\textit{s}}: Source
+\item \texttt{\textit{v}}: Software interrupt level, times two
+\end{itemize}
+\end{document}
