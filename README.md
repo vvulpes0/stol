@@ -4,6 +4,7 @@
 
 ## Contents
 * [Running Programs](#running-programs)
+* [The STOLE Emulator](#the-stole-emulator)
 * [Writing Programs](#writing-programs)
 * [License](#license)
 
@@ -34,6 +35,33 @@ To load and run a program:
 * Press the reset button beneath the CPU
 * Start the system clock (Simulate > Auto-Tick Enabled: enable)
 
+## The STOLE Emulator
+There is also an emulator written in C, `stole`.
+To run a program there, execute it with your source file as an argument
+or as a filter on your source file:
+
+    $ stole file.lcode
+
+or
+
+    $ stole <file.lcode
+
+This will run the program,
+reading keyboard input from the controlling terminal,
+printing any generated output to the standard output,
+and printing, at the end, a summary of the system state.
+
+In order to build `stole`, you need:
+
+* a C compiler, targeting C99 or later
+* `make`, be that GNU make or BSD make
+* a Unix-like system
+
+With these available, run `make` in the `tools` directory
+and you should find `stole` in that directory.
+
+    $ cd tools && make stole
+
 ## Writing Programs
 Consult the `documentation.pdf` for a complete reference
 on programming in assembly language for this system.
@@ -54,7 +82,7 @@ In order to build `stolas`, you need:
 With all tools available, run `make` in the `tools` directory
 and you should find `stolas` in that directory.
 
-    $ cd tools && make
+    $ cd tools && make stolas
 
 ## License
 The package as a whole and all files included herein

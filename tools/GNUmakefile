@@ -2,8 +2,15 @@
 .SUFFIXES : .c .o
 .c.o :
 	$(CC) $(CFLAGS) -c -o $@ $<
+.o :
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+
+.MAIN : all
+.PHONY : all
+all : stolas stole
+
 stolas : lex.yy.o y.tab.o symtable.o instrs.o
-	$(CC) $(CFLAGS) $(LDFLAGS) $(LDLIBS) -o $@ $^
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 y.tab.h y.tab.c : stolas.y
 	yacc -d $^
 lex.yy.c : stolas.lex

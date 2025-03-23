@@ -5,6 +5,6 @@
 	mov (r0),'\f'
 loop:	mov r1,(r0+1)
 	or r1,r1
-	br.n loop       ; end hardware initialization
+	br.p loop       ; end hardware initialization
 	push sp
 	rtp
