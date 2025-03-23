@@ -31,6 +31,10 @@
     </tool>
   </lib>
   <lib desc="#Gates" name="1">
+    <tool name="NOT Gate">
+      <a name="facing" val="south"/>
+      <a name="size" val="20"/>
+    </tool>
     <tool name="AND Gate">
       <a name="size" val="30"/>
     </tool>
@@ -126,7 +130,7 @@
       <a name="width" val="3"/>
     </comp>
     <comp lib="0" loc="(240,580)" name="Ground"/>
-    <comp lib="0" loc="(360,600)" name="Splitter">
+    <comp lib="0" loc="(380,600)" name="Splitter">
       <a name="appear" val="center"/>
       <a name="bit1" val="0"/>
       <a name="bit2" val="0"/>
@@ -135,10 +139,10 @@
       <a name="bit5" val="0"/>
       <a name="bit6" val="0"/>
       <a name="bit7" val="1"/>
-      <a name="facing" val="north"/>
+      <a name="facing" val="west"/>
       <a name="incoming" val="8"/>
     </comp>
-    <comp lib="0" loc="(420,580)" name="Bit Extender"/>
+    <comp lib="0" loc="(430,580)" name="Bit Extender"/>
     <comp lib="0" loc="(440,130)" name="Splitter">
       <a name="appear" val="center"/>
       <a name="bit1" val="0"/>
@@ -223,6 +227,10 @@
     <comp lib="1" loc="(350,140)" name="Buffer">
       <a name="width" val="16"/>
     </comp>
+    <comp lib="1" loc="(350,600)" name="NOT Gate">
+      <a name="facing" val="south"/>
+      <a name="size" val="20"/>
+    </comp>
     <comp lib="1" loc="(380,290)" name="AND Gate">
       <a name="facing" val="south"/>
       <a name="size" val="30"/>
@@ -247,7 +255,7 @@
       <a name="appearance" val="classic"/>
       <a name="contents">addr/data: 8 16
 c4f0 7000 190f c4f0 8000 c400 100 c80c
-c710 1 9511 30 fffd 110f d0f
+c710 1 9511 b0 fffd 110f d0f
 </a>
       <a name="dataWidth" val="16"/>
       <a name="label" val="BootROM"/>
@@ -349,12 +357,13 @@ c400 100 c430 8010 c613 6431 9511 40
     <wire from="(30,630)" to="(50,630)"/>
     <wire from="(320,140)" to="(330,140)"/>
     <wire from="(350,140)" to="(410,140)"/>
-    <wire from="(360,600)" to="(370,600)"/>
+    <wire from="(350,600)" to="(360,600)"/>
+    <wire from="(360,580)" to="(360,590)"/>
     <wire from="(370,160)" to="(370,260)"/>
-    <wire from="(370,580)" to="(370,600)"/>
-    <wire from="(370,580)" to="(380,580)"/>
     <wire from="(380,290)" to="(380,320)"/>
     <wire from="(380,320)" to="(470,320)"/>
+    <wire from="(380,580)" to="(380,600)"/>
+    <wire from="(380,580)" to="(390,580)"/>
     <wire from="(390,80)" to="(390,260)"/>
     <wire from="(390,80)" to="(770,80)"/>
     <wire from="(40,370)" to="(40,620)"/>
@@ -362,14 +371,14 @@ c400 100 c430 8010 c613 6431 9511 40
     <wire from="(40,620)" to="(50,620)"/>
     <wire from="(410,140)" to="(410,350)"/>
     <wire from="(410,350)" to="(470,350)"/>
-    <wire from="(420,580)" to="(430,580)"/>
     <wire from="(430,130)" to="(430,300)"/>
     <wire from="(430,130)" to="(440,130)"/>
     <wire from="(430,300)" to="(430,370)"/>
     <wire from="(430,300)" to="(440,300)"/>
     <wire from="(430,370)" to="(430,460)"/>
     <wire from="(430,460)" to="(440,460)"/>
-    <wire from="(430,580)" to="(430,610)"/>
+    <wire from="(430,580)" to="(440,580)"/>
+    <wire from="(440,580)" to="(440,610)"/>
     <wire from="(460,130)" to="(470,130)"/>
     <wire from="(460,300)" to="(470,300)"/>
     <wire from="(460,460)" to="(470,460)"/>
@@ -387,7 +396,7 @@ c400 100 c430 8010 c613 6431 9511 40
     <wire from="(780,350)" to="(820,350)"/>
     <wire from="(790,90)" to="(790,500)"/>
     <wire from="(80,600)" to="(190,600)"/>
-    <wire from="(80,610)" to="(430,610)"/>
+    <wire from="(80,610)" to="(440,610)"/>
     <wire from="(80,620)" to="(230,620)"/>
     <wire from="(800,510)" to="(820,510)"/>
     <wire from="(820,180)" to="(820,350)"/>
